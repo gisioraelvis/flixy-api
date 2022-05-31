@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './db/db.module';
+import { AuthModule } from './auth/auth.module';
+import { CommonModule } from './common/common.module';
+import { UsersModule } from './users/users.module';
 import * as Joi from 'joi';
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import * as Joi from 'joi';
         DB_NAME: Joi.string().required(),
       }),
     }),
+    AuthModule,
+    CommonModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],
