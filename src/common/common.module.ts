@@ -4,6 +4,6 @@ import { Global, Module } from '@nestjs/common';
 @Module({
   controllers: [],
   providers: [],
-  exports: [CommonModule],
+  exports: [],
 })
 export class CommonModule {}
