@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { User } from 'src/users/entities/user.entity';
+import { User } from 'src/user/entities/user.entity';
 import { forgotPasswordDto, SignInDto, SignUpDto } from './dto/create-auth.dto';
 
 @Injectable()

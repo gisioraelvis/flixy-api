@@ -16,11 +16,11 @@ export class AuthController {
 
   @Post('/signup')
   signUp(@Body() signUpDto: SignUpDto) {
-    return this.authService.(signUpDto);
+    return this.authService.signUp(signUpDto);
   }
 
   @Post('/signin')
   signIn(@Body() signInDto: SignInDto) {
-    return this.authService.create(signInDto);
+    return this.authService.signIn(signInDto);
   }
 }
