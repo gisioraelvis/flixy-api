@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import DatabaseLogger from 'src/logger/databaseLogger';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         autoLoadEntities: true,
         synchronize: true,
         entities: [__dirname + '/../**/*.entity.ts'],
+        //logger: new DatabaseLogger(),
       }),
     }),
   ],
