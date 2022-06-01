@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import DatabaseLogger from 'src/logger/databaseLogger';
+import TypeOrmQueryLogger from 'src/utils/typeOrmQueryLogger';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import DatabaseLogger from 'src/logger/databaseLogger';
         autoLoadEntities: true,
         synchronize: true,
         entities: [__dirname + '/../**/*.entity.ts'],
-        //logger: new DatabaseLogger(),
+        logger: new TypeOrmQueryLogger(),
       }),
     }),
   ],

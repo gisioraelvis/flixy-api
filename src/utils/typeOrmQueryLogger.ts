@@ -1,40 +1,61 @@
-import { Logger as TypeOrmLogger } from 'typeorm';
+import { Logger as TypeOrmLogger, QueryRunner } from 'typeorm';
 import { Logger as NestLogger } from '@nestjs/common';
 
-class DatabaseLogger implements TypeOrmLogger {
+class TypeOrmQueryLogger implements TypeOrmLogger {
   private readonly logger = new NestLogger('SQL');
 
-  logQuery(query: string, parameters?: unknown[]) {
+  logQuery(query: string, parameters?: unknown[], queryRunner?: QueryRunner) {
+    if (queryRunner?.data?.isCreatingLogs) {
+      return;
+    }
     this.logger.log(
       `${query} -- Parameters: ${this.stringifyParameters(parameters)}`,
     );
   }
-
-  logQueryError(error: string, query: string, parameters?: unknown[]) {
+  logQueryError(
+    error: string,
+    query: string,
+    parameters?: unknown[],
+    queryRunner?: QueryRunner,
+  ) {
+    if (queryRunner?.data?.isCreatingLogs) {
+      return;
+    }
     this.logger.error(
       `${query} -- Parameters: ${this.stringifyParameters(
         parameters,
       )} -- ${error}`,
     );
   }
-
-  logQuerySlow(time: number, query: string, parameters?: unknown[]) {
+  logQuerySlow(
+    time: number,
+    query: string,
+    parameters?: unknown[],
+    queryRunner?: QueryRunner,
+  ) {
+    if (queryRunner?.data?.isCreatingLogs) {
+      return;
+    }
     this.logger.warn(
       `Time: ${time} -- Parameters: ${this.stringifyParameters(
         parameters,
       )} -- ${query}`,
     );
   }
-
   logMigration(message: string) {
     this.logger.log(message);
   }
-
   logSchemaBuild(message: string) {
     this.logger.log(message);
   }
-
-  log(level: 'log' | 'info' | 'warn', message: string) {
+  log(
+    level: 'log' | 'info' | 'warn',
+    message: string,
+    queryRunner?: QueryRunner,
+  ) {
+    if (queryRunner?.data?.isCreatingLogs) {
+      return;
+    }
     if (level === 'log') {
       return this.logger.log(message);
     }
@@ -45,7 +66,6 @@ class DatabaseLogger implements TypeOrmLogger {
       return this.logger.warn(message);
     }
   }
-
   private stringifyParameters(parameters?: unknown[]) {
     try {
       return JSON.stringify(parameters);
@@ -55,4 +75,4 @@ class DatabaseLogger implements TypeOrmLogger {
   }
 }
 
-export default DatabaseLogger;
+export default TypeOrmQueryLogger;

@@ -6,7 +6,7 @@ import { CommonModule } from './common/common.module';
 import { UserModule } from './user/user.module';
 import { LoggerModule } from './logger/logger.module';
 import * as Joi from 'joi';
-import LogsMiddleware from './utils/logs.middleware';
+import HttpLogMiddleware from './utils/httpLogMiddleware';
 @Module({
   imports: [
     DatabaseModule,
@@ -34,6 +34,6 @@ import LogsMiddleware from './utils/logs.middleware';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LogsMiddleware).forRoutes('*');
+    consumer.apply(HttpLogMiddleware).forRoutes('*');
   }
 }
