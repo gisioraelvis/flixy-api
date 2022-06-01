@@ -1,4 +1,4 @@
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import CustomLogger from './logger/customLogger';
@@ -24,8 +24,6 @@ async function bootstrap() {
   app.useLogger(app.get(CustomLogger));
   await app.listen(PORT, HOST);
 
-  const logger = app.get(CustomLogger);
-  // TODO: Fix the "DEBUG undefined" message
-  logger.debug(`App running on http://${HOST}:${PORT}`);
+  Logger.debug(`App running on ${await app.getUrl()}`);
 }
 bootstrap();
