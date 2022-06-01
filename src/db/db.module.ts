@@ -16,6 +16,7 @@ import TypeOrmQueryLogger from 'src/utils/typeOrmQueryLogger';
         password: configService.get('POSTGRES_PASSWORD'),
         database: configService.get('DB_NAME'),
         autoLoadEntities: true,
+        // TODO: Should always be false in production
         synchronize: true,
         entities: [__dirname + '/../**/*.entity.ts'],
         logger: new TypeOrmQueryLogger(),

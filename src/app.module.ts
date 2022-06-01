@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { LoggerModule } from './logger/logger.module';
 import * as Joi from 'joi';
 import HttpLogMiddleware from './utils/httpLogMiddleware';
+
 @Module({
   imports: [
     DatabaseModule,
