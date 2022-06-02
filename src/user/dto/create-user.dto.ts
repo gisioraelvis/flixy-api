@@ -1,10 +1,16 @@
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
+const EmailMessage = 'Email must be a valid email address';
 export class CreateUserDto {
-  @IsEmail()
+  @IsNotEmpty()
+  @IsEmail({}, { message: EmailMessage })
   email: string;
+
+  @IsNotEmpty()
   @IsString()
   phoneNumber: string;
+
+  @IsNotEmpty()
   @IsString()
   password: string;
 }

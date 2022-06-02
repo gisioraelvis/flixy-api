@@ -1,22 +1,32 @@
-import { IsEmail, IsPhoneNumber, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
+const EmailMessage = 'Email must be a valid email address';
 export class SignUpDto {
-  @IsEmail()
+  @IsNotEmpty()
+  @IsEmail({}, { message: EmailMessage })
   email: string;
-  @IsPhoneNumber()
-  phonenumber: string;
+
+  @IsNotEmpty()
+  @IsString()
+  phoneNumber: string;
+
+  @IsNotEmpty()
   @IsString()
   password: string;
 }
 
 export class SignInDto {
-  @IsEmail()
+  @IsNotEmpty()
+  @IsEmail({}, { message: EmailMessage })
   email: string;
+
+  @IsNotEmpty()
   @IsString()
   password: string;
 }
 
-export class forgotPasswordDto {
-  @IsEmail()
+export class ForgotPasswordDto {
+  @IsNotEmpty()
+  @IsEmail({}, { message: EmailMessage })
   email: string;
 }

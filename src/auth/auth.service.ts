@@ -1,20 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { forgotPasswordDto, SignInDto, SignUpDto } from './dto/create-auth.dto';
+import { ForgotPasswordDto, SignInDto, SignUpDto } from './dto/create-auth.dto';
 
 @Injectable()
 export class AuthService {
   //inject UserService
   constructor(private readonly userService: UserService) {}
-  signUp(signUpDto: SignUpDto) {
-    return 'This action adds a new auth';
+
+  async signUp(signUpDto: SignUpDto) {
+    const newUser = await this.userService.create(signUpDto);
+    return newUser;
   }
 
-  signIn(signInDto: SignInDto) {
-    return 'This action adds a new auth';
+  async signIn(signInDto: SignInDto) {
+    const user = await this.userService.findOne(signInDto.email);
+    const isValidPassword = user.password === signInDto.password;
+    if (!isValidPassword) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    return user;
   }
 
-  forgotPassword(forgotPasswordDto: forgotPasswordDto) {
-    return 'This action adds a new auth';
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    await this.userService.findOne(forgotPasswordDto.email);
+    return { message: 'Check your email for a link to reset your password' };
   }
 }

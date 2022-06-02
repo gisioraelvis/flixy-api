@@ -9,13 +9,13 @@ enum status {
 
 @Entity()
 export class User extends CommonEntity {
-  @Column()
+  @Column({ unique: true })
   email: string;
-  @Column()
+  @Column({ unique: true })
   phoneNumber: string;
   @Column()
   password: string;
-  @Column({ default: status.PENDING })
+  @Column({ enum: status, default: status.PENDING })
   status: status;
   @Column({ default: null })
   googleId: string | null;

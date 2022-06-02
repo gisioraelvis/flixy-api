@@ -17,7 +17,12 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  /**
+   * Create a new user
+   * @param createUserDto - email, phoneNumber, password
+   * @returns {Promise<User>}
+   */
+  async create(createUserDto: CreateUserDto): Promise<User> {
     const { email, phoneNumber } = createUserDto;
     const userEmail = await this.userRepository.findOne({ email });
 
@@ -35,11 +40,20 @@ export class UserService {
     return newUser;
   }
 
-  async findAll() {
+  /**
+   * Returns all users
+   * @returns {Promise<User[]>}
+   */
+  async findAll(): Promise<User[]> {
     return await this.userRepository.find();
   }
 
-  async findOne(email: string) {
+  /**
+   * Finds a user by email
+   * @param email
+   * @returns {Promise<User>}
+   */
+  async findOne(email: string): Promise<User> {
     const user = await this.userRepository.findOne({ email });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -47,7 +61,13 @@ export class UserService {
     return user;
   }
 
-  async update(email: string, updateUserDto: UpdateUserDto) {
+  /**
+   * Updates user details
+   * @param email
+   * @param updateUserDto
+   * @returns {Promise<User>}
+   */
+  async update(email: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.userRepository.findOne({ email });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -57,6 +77,10 @@ export class UserService {
     return updatedUser;
   }
 
+  /**
+   * Deletes a user
+   * @param email
+   */
   async remove(email: string) {
     const deletedUser = await this.userRepository.delete({ email });
     // User doesn't exist
