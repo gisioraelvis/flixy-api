@@ -17,8 +17,9 @@ import TypeOrmQueryLogger from 'src/utils/typeOrmQueryLogger';
         password: configService.get('POSTGRES_PASSWORD'),
         database: configService.get('DB_NAME'),
         autoLoadEntities: true,
-        // TODO: Should always be false in production
-        synchronize: true,
+        // Should always be false in production
+        synchronize:
+          configService.get('NODE_ENV') === 'development' ? true : false,
         entities: [__dirname + '/../**/*.entity.ts'],
         // Only log typeOrm SQL queries in development
         logger:
