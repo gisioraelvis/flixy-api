@@ -10,14 +10,21 @@ export default class LogsService {
     @InjectRepository(Log)
     private logsRepository: Repository<Log>,
   ) {}
-
-  async createLog(log: CreateLogDto) {
-    const newLog = this.logsRepository.create(log);
-    await this.logsRepository.save(newLog, {
-      data: {
-        isCreatingLogs: true,
-      },
-    });
-    return newLog;
+  /**
+   * Saves app logs to the database when in production
+   * @param log
+   * @returns {Promise<Log>}
+   */
+  async createLog(log: CreateLogDto): Promise<Log> {
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction) {
+      const newLog = this.logsRepository.create(log);
+      await this.logsRepository.save(newLog, {
+        data: {
+          isCreatingLogs: true,
+        },
+      });
+      return newLog;
+    }
   }
 }
