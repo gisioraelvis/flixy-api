@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import TypeOrmQueryLogger from 'src/utils/typeOrmQueryLogger';
 
+@Global()
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({

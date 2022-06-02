@@ -12,6 +12,7 @@ import HttpLogMiddleware from './utils/httpLogMiddleware';
   imports: [
     DatabaseModule,
     ConfigModule.forRoot({
+      isGlobal: true,
       validationSchema: Joi.object({
         NODE_ENV: Joi.string()
           .valid('development', 'staging', 'production')
