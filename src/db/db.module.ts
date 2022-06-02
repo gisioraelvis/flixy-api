@@ -20,7 +20,11 @@ import TypeOrmQueryLogger from 'src/utils/typeOrmQueryLogger';
         // TODO: Should always be false in production
         synchronize: true,
         entities: [__dirname + '/../**/*.entity.ts'],
-        logger: new TypeOrmQueryLogger(),
+        // Only log typeOrm SQL queries in development
+        logger:
+          configService.get('NODE_ENV') === 'development'
+            ? new TypeOrmQueryLogger()
+            : 'debug',
       }),
     }),
   ],
