@@ -12,13 +12,13 @@ export default class LogsService {
   ) {}
   /**
    * Saves app logs to the database when in production
-   * @param log
+   * @param logDto
    * @returns {Promise<Log>}
    */
-  async createLog(log: CreateLogDto): Promise<Log> {
+  async createLog(logDto: CreateLogDto): Promise<Log> {
     const isProduction = process.env.NODE_ENV === 'production';
     if (isProduction) {
-      const newLog = this.logsRepository.create(log);
+      const newLog = this.logsRepository.create(logDto);
       await this.logsRepository.save(newLog, {
         data: {
           isCreatingLogs: true,

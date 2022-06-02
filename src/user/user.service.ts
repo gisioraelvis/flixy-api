@@ -19,11 +19,11 @@ export class UserService {
 
   /**
    * Create a new user
-   * @param createUserDto - email, phoneNumber, password
+   * @param userDto - email, phoneNumber, password
    * @returns {Promise<User>}
    */
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const { email, phoneNumber } = createUserDto;
+  async create(userDto: CreateUserDto): Promise<User> {
+    const { email, phoneNumber } = userDto;
     const userEmail = await this.userRepository.findOne({ email });
 
     // Email already registered
@@ -35,7 +35,7 @@ export class UserService {
     if (userPhoneNumber) {
       throw new ConflictException('Phone Number is already registered');
     }
-    const newUser = await this.userRepository.create(createUserDto);
+    const newUser = await this.userRepository.create(userDto);
     await this.userRepository.save(newUser);
     return newUser;
   }
@@ -64,15 +64,15 @@ export class UserService {
   /**
    * Updates user details
    * @param email
-   * @param updateUserDto
+   * @param userDto
    * @returns {Promise<User>}
    */
-  async update(email: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(email: string, userDto: UpdateUserDto): Promise<User> {
     const user = await this.userRepository.findOne({ email });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    await this.userRepository.update({ email }, updateUserDto);
+    await this.userRepository.update({ email }, userDto);
     const updatedUser = await this.userRepository.findOne(user.id);
     return updatedUser;
   }
