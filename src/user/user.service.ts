@@ -19,8 +19,8 @@ export class UserService {
 
   /**
    * Create a new user
-   * @param userDto - email, phoneNumber, password
-   * @returns {Promise<User>}
+   * @params userDto - email, phoneNumber, password
+   * @returns User object
    */
   async create(userDto: CreateUserDto): Promise<User> {
     const { email, phoneNumber } = userDto;
