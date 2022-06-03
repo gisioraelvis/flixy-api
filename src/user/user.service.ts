@@ -1,6 +1,5 @@
 import {
   ConflictException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -35,13 +34,13 @@ export class UserService {
     if (userPhoneNumber) {
       throw new ConflictException('Phone Number is already registered');
     }
-    const newUser = await this.userRepository.create(userDto);
+    const newUser = this.userRepository.create(userDto);
     await this.userRepository.save(newUser);
     return newUser;
   }
 
   /**
-   * Returns all users
+   * Return all users
    * @returns {Promise<User[]>}
    */
   async findAll(): Promise<User[]> {
@@ -49,9 +48,9 @@ export class UserService {
   }
 
   /**
-   * Finds a user by email
+   * Find a user by email
    * @param email
-   * @returns {Promise<User>}
+   * @returns {Promise<User>} - user
    */
   async findOne(email: string): Promise<User> {
     const user = await this.userRepository.findOne({ email });
@@ -62,10 +61,9 @@ export class UserService {
   }
 
   /**
-   * Updates user details
-   * @param email
-   * @param userDto
-   * @returns {Promise<User>}
+   * Update user details
+   * @params email and UpdateUserDto
+   * @returns {Promise<User>} - updated user
    */
   async update(email: string, userDto: UpdateUserDto): Promise<User> {
     const user = await this.userRepository.findOne({ email });
@@ -78,7 +76,7 @@ export class UserService {
   }
 
   /**
-   * Deletes a user
+   * Delete a user
    * @param email
    */
   async remove(email: string) {
@@ -87,6 +85,6 @@ export class UserService {
     if (!deletedUser.affected) {
       throw new NotFoundException('User not found');
     }
-    return HttpStatus.ACCEPTED;
+    return { message: 'User deleted' };
   }
 }
