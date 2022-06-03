@@ -1,6 +1,7 @@
 import { CommonEntity } from 'src/common/entities/common.entity';
 import { BeforeInsert, Column, Entity } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Exclude } from 'class-transformer';
 
 enum status {
   PENDING = 'PENDING',
@@ -17,6 +18,7 @@ export class User extends CommonEntity {
   phoneNumber: string;
 
   @Column()
+  @Exclude()
   password: string;
 
   @BeforeInsert()

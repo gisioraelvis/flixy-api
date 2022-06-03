@@ -7,6 +7,7 @@ import {
   Request,
   Get,
 } from '@nestjs/common';
+import { ExcludeNullsInterceptor } from 'src/utils/excludeNulls.interceptor';
 import { AuthService } from './auth.service';
 import { ForgotPasswordDto, SignUpDto } from './dto/create-auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
