@@ -76,6 +76,21 @@ export class UserService {
   }
 
   /**
+   * Mark email as confirmed
+   * @param email
+   * @returns Boolean
+   */
+  async markEmailAsConfirmed(email: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    user.isEmailConfirmed = true;
+    await this.userRepository.save(user);
+    return true;
+  }
+
+  /**
    * Delete a user
    * @param email
    */

@@ -3,13 +3,15 @@ import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { ForgotPasswordDto, SignUpDto } from './dto/create-auth.dto';
 import * as bcrypt from 'bcrypt';
+import { EmailConfirmationService } from './emailConfirmation.service';
 
 @Injectable()
 export class AuthService {
   //inject UserService
   constructor(
     private readonly userService: UserService,
-    private jwtService: JwtService,
+    private readonly emailConfirmationService: EmailConfirmationService,
+    private readonly jwtService: JwtService,
   ) {}
 
   /**
@@ -23,6 +25,9 @@ export class AuthService {
      * Does the necessary validations and creates a new user
      */
     const newUser = await this.userService.create(signUpDto);
+
+    // Send an email to the user with a link to confirm their email
+    await this.emailConfirmationService.sendVerificationLink(signUpDto.email);
 
     // Return the JWT token
     return this.signIn(newUser);

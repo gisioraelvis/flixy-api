@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { UserModule } from './user/user.module';
 import { LoggerModule } from './logger/logger.module';
+import { AppMailerModule } from './mailer/mailer.module';
 import * as Joi from 'joi';
 import HttpLogMiddleware from './utils/httpLogMiddleware';
 
@@ -26,12 +27,20 @@ import HttpLogMiddleware from './utils/httpLogMiddleware';
         DB_NAME: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_IN: Joi.string().required(),
+        JWT_EMAIL_VERIFICATION: Joi.string().required(),
+        JWT_EMAIL_VERIFICATION_EXPIRES_IN: Joi.string().required(),
+        EMAIL_HOST: Joi.string().required(),
+        SMTP_PORT: Joi.number().required(),
+        SMTP_API_KEY: Joi.string().required(),
+        SMTP_USERNAME: Joi.string().required(),
+        SMTP_PASSWORD: Joi.string().required(),
       }),
     }),
     AuthModule,
     CommonModule,
     UserModule,
     LoggerModule,
+    AppMailerModule,
   ],
   controllers: [],
   providers: [],

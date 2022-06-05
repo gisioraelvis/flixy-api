@@ -30,3 +30,9 @@ export class ForgotPasswordDto {
   @IsEmail({}, { message: EmailMessage })
   email: string;
 }
+
+export class EmailConfirmationDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+}

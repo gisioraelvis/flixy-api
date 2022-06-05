@@ -14,6 +14,9 @@ export class User extends CommonEntity {
   @Column({ unique: true })
   email: string;
 
+  @Column({ default: false })
+  isEmailConfirmed: boolean;
+
   @Column({ unique: true })
   phoneNumber: string;
 

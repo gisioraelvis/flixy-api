@@ -9,7 +9,6 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import CustomLogger from './logger/customLogger';
-import { ExcludeNullsInterceptor } from './utils/excludeNulls.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -33,8 +32,6 @@ async function bootstrap() {
   app.useGlobalInterceptors(
     // Exludes specified properties(@Exclude() on entity fields) from response
     new ClassSerializerInterceptor(app.get(Reflector)),
-    // Exclude nulls from response
-    new ExcludeNullsInterceptor(),
   );
   // Custom logger
   app.useLogger(app.get(CustomLogger));

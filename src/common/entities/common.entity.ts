@@ -1,10 +1,19 @@
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export class CommonEntity {
   @PrimaryGeneratedColumn()
   id: number;
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+
+  @Column()
+  @CreateDateColumn()
   createdAt: Date;
-  @Column({ type: 'timestamp', nullable: true, default: null })
+
+  @Column({ nullable: true, default: null })
+  @UpdateDateColumn()
   updatedAt: Date | null;
 }
