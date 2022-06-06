@@ -19,7 +19,7 @@ export class UserService {
   /**
    * Create a new user
    * @params userDto - email, phoneNumber, password
-   * @returns User object
+   * @returns {Promise<User>} - created user
    */
   async create(userDto: CreateUserDto): Promise<User> {
     const { email, phoneNumber } = userDto;
@@ -40,7 +40,7 @@ export class UserService {
   }
 
   /**
-   * Return all users
+   * Return all Users
    * @returns {Promise<User[]>}
    */
   async findAll(): Promise<User[]> {
@@ -50,7 +50,7 @@ export class UserService {
   /**
    * Find a user by email
    * @param email
-   * @returns {Promise<User>} - user
+   * @returns {Promise<User>} - User
    */
   async findOne(email: string): Promise<User> {
     const user = await this.userRepository.findOne({ email });
@@ -79,7 +79,7 @@ export class UserService {
    * Update user password
    * @param email
    * @param newPassword
-   * @returns {Promise<User | any>} - updated user or error message
+   * @returns {Promise<User | any>} - Updated user
    */
   async updatePassword(
     email: string,
@@ -98,9 +98,9 @@ export class UserService {
   /**
    * Mark email as confirmed
    * @param email
-   * @returns Boolean
+   * @returns {Promise<User>} - Updated user
    */
-  async markEmailAsConfirmed(email: string): Promise<boolean> {
+  async markEmailAsConfirmed(email: string): Promise<any> {
     const user = await this.userRepository.findOne({ email });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -108,15 +108,15 @@ export class UserService {
     user.isEmailConfirmed = true;
     // update user status to verified
     user.status = UserAccountStatus.VERIFIED;
-    await this.userRepository.save(user);
-    return true;
+    return await this.userRepository.save(user);
   }
 
   /**
    * Delete a user
-   * @param email
+   * @param email - user email
+   * @returns {Promise<any>} - user deleted message
    */
-  async remove(email: string) {
+  async remove(email: string): Promise<any> {
     const deletedUser = await this.userRepository.delete({ email });
     // User doesn't exist
     if (!deletedUser.affected) {

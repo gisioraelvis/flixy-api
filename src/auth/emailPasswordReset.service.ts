@@ -4,10 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import VerificationTokenPayload from './verificationTokenPayload.interface';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserService } from '../user/user.service';
-import {
-  EMAIL_CONFIRMATION_URL,
-  EMAIL_PASSWORD_RESET_URL,
-} from 'src/common/constants';
+import { EMAIL_PASSWORD_RESET_URL } from 'src/common/constants';
 
 @Injectable()
 export class EmailPasswordResetService {
@@ -21,8 +18,9 @@ export class EmailPasswordResetService {
   /**
    * Sends email with confirmation link and token as query param
    * @param email - User email
+   * @returns {Promise<any>} - Sent email status or error message
    */
-  public sendResetLink(email: string) {
+  public sendResetLink(email: string): Promise<any> {
     const payload: VerificationTokenPayload = { email };
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_EMAIL_VERIFICATION'),
@@ -51,8 +49,9 @@ export class EmailPasswordResetService {
   /**
    * Verifies token from the password reset link
    * @param token - Token from password reset link
+   * @returns {Promise<any>} - User email or error message
    */
-  public async decodePasswordResetToken(token: string) {
+  public async decodePasswordResetToken(token: string): Promise<any> {
     try {
       const payload = await this.jwtService.verify(token, {
         secret: this.configService.get('JWT_EMAIL_VERIFICATION'),

@@ -9,6 +9,7 @@ import RequestWithUser from '../requestWithUser.interface';
 /**
  * Ensures the email is confirmed before allowing access to the route
  * Useful e.g if we depend on email messaging a lot in our application
+ * Want to ensure the email is valid
  */
 @Injectable()
 export class EmailConfirmationGuard implements CanActivate {
