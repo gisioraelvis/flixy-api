@@ -70,9 +70,24 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    // Before updating the user, check if the email is already registered
+    const userEmail = await this.userRepository.findOne({
+      email: userDto.email,
+    });
+    if (userEmail && userEmail.id !== user.id) {
+      throw new ConflictException('Email is already registered');
+    }
+
+    // Before updating the user, check if the phone number is already registered
+    const userPhoneNumber = await this.userRepository.findOne({
+      phoneNumber: userDto.phoneNumber,
+    });
+    if (userPhoneNumber && userPhoneNumber.id !== user.id) {
+      throw new ConflictException('Phone Number is already registered');
+    }
+
     await this.userRepository.update({ email }, userDto);
-    const updatedUser = await this.userRepository.findOne(user.id);
-    return updatedUser;
+    return await this.userRepository.findOne(user.id);
   }
 
   /**
@@ -106,6 +121,22 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     user.isEmailConfirmed = true;
+    // update user status to verified
+    user.status = UserAccountStatus.VERIFIED;
+    return await this.userRepository.save(user);
+  }
+
+  /**
+   * Mark email as confirmed
+   * @param email
+   * @returns {Promise<User>} - Updated user
+   */
+  async markPhoneNumberConfirmed(email: string): Promise<any> {
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    user.isPhoneNumberConfirmed = true;
     // update user status to verified
     user.status = UserAccountStatus.VERIFIED;
     return await this.userRepository.save(user);
