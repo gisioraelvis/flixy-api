@@ -1,15 +1,9 @@
 import { CommonEntity } from 'src/common/entities/common.entity';
-import {
-  AfterUpdate,
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  Entity,
-} from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 
-enum status {
+export enum UserAccountStatus {
   PENDING = 'PENDING',
   VERIFIED = 'VERIFIED',
   BLOCKED = 'BLOCKED',
@@ -36,8 +30,8 @@ export class User extends CommonEntity {
     this.password = await bcrypt.hash(this.password, 10);
   }
 
-  @Column({ enum: status, default: status.PENDING })
-  status: status;
+  @Column({ enum: UserAccountStatus, default: UserAccountStatus.PENDING })
+  status: UserAccountStatus;
 
   @Column({ default: null })
   googleId: string | null;

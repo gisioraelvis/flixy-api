@@ -64,6 +64,7 @@ export class EmailConfirmationService {
    * @param token - Token from confirmation email
    */
   public async decodeConfirmationToken(token: string) {
+    let userEmail: string;
     try {
       const payload = await this.jwtService.verify(token, {
         secret: this.configService.get('JWT_EMAIL_VERIFICATION'),
@@ -73,14 +74,12 @@ export class EmailConfirmationService {
         const email = payload.email;
         return await this.confirmEmail(email);
       }
-
       // If payload is not an object or doesn't contain email
       throw new BadRequestException();
     } catch (error) {
       if (error?.name === 'TokenExpiredError') {
-        throw new BadRequestException(
-          'Email confirmation token expired, resend email confirmation link',
-        );
+        console.log(userEmail);
+        throw new BadRequestException('Email confirmation token expired');
       }
       throw new BadRequestException('Invalid email confirmation token');
     }
@@ -90,12 +89,13 @@ export class EmailConfirmationService {
    * Resend email confirmation link e.g In cases where:
    * initial link was not received or expired
    * @param email
+   * @returns {Promise<any>} - Sent email status or error message
    */
-  public async resendConfirmationLink(email: string) {
+  public async resendConfirmationLink(email: string): Promise<any> {
     const user = await this.userService.findOne(email);
     if (user.isEmailConfirmed) {
       throw new BadRequestException('Email already confirmed');
     }
-    await this.sendVerificationLink(user.email);
+    return await this.sendVerificationLink(user.email);
   }
 }

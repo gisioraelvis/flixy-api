@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { User, UserAccountStatus } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -106,6 +106,8 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     user.isEmailConfirmed = true;
+    // update user status to verified
+    user.status = UserAccountStatus.VERIFIED;
     await this.userRepository.save(user);
     return true;
   }
