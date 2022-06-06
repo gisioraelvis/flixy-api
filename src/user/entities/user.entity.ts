@@ -20,6 +20,9 @@ export class User extends CommonEntity {
   @Column({ unique: true })
   phoneNumber: string;
 
+  @Column({ default: false })
+  public isPhoneNumberConfirmed: boolean;
+
   @Column()
   @Exclude()
   password: string;

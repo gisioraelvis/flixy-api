@@ -6,6 +6,7 @@ import { CommonModule } from './common/common.module';
 import { UserModule } from './user/user.module';
 import { LoggerModule } from './logger/logger.module';
 import { AppMailerModule } from './mailer/mailer.module';
+import { SmsModule } from './sms/sms.module';
 import * as Joi from 'joi';
 import HttpLogMiddleware from './utils/httpLogMiddleware';
 
@@ -34,6 +35,10 @@ import HttpLogMiddleware from './utils/httpLogMiddleware';
         SMTP_API_KEY: Joi.string().required(),
         SMTP_USERNAME: Joi.string().required(),
         SMTP_PASSWORD: Joi.string().required(),
+        TWILIO_ACCOUNT_SID: Joi.string().required(),
+        TWILIO_AUTH_TOKEN: Joi.string().required(),
+        TWILIO_VERIFICATION_SERVICE_SID: Joi.string().required(),
+        TWILIO_SENDER_PHONE_NUMBER: Joi.string().required(),
       }),
     }),
     AuthModule,
@@ -41,6 +46,7 @@ import HttpLogMiddleware from './utils/httpLogMiddleware';
     UserModule,
     LoggerModule,
     AppMailerModule,
+    SmsModule,
   ],
   controllers: [],
   providers: [],
