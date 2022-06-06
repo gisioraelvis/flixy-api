@@ -12,6 +12,7 @@ import { AuthService } from './auth.service';
 import {
   EmailConfirmationDto,
   ForgotPasswordDto,
+  ResetPasswordDto,
   SignUpDto,
 } from './dto/create-auth.dto';
 import { EmailConfirmationService } from './emailConfirmation.service';
@@ -48,7 +49,7 @@ export class AuthController {
     await this.emailConfirmationService.resendConfirmationLink(req.user.email);
   }
 
-  // User login
+  // User signin with email and password
   @Post('signin')
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
@@ -67,6 +68,16 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(200)
   forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-    return this.authService.forgotPassword(forgotPasswordDto);
+    return this.authService.forgotPassword(forgotPasswordDto.email);
+  }
+
+  // Reset password
+  @Post('reset-password')
+  resetPassword(
+    @Query('token') token: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ) {
+    console.log(token);
+    return this.authService.resetPassword(token, resetPasswordDto.password);
   }
 }

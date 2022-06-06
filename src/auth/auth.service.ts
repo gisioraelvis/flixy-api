@@ -4,6 +4,8 @@ import { UserService } from 'src/user/user.service';
 import { ForgotPasswordDto, SignUpDto } from './dto/create-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { EmailConfirmationService } from './emailConfirmation.service';
+import { EmailPasswordResetService } from './emailPasswordReset.service';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +14,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly emailConfirmationService: EmailConfirmationService,
     private readonly jwtService: JwtService,
+    private readonly emailPasswordResetService: EmailPasswordResetService,
   ) {}
 
   /**
@@ -60,8 +63,27 @@ export class AuthService {
     };
   }
 
-  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
-    await this.userService.findOne(forgotPasswordDto.email);
-    return { message: 'Check your email for a link to reset your password' };
+  /**
+   * Sends user email with a link to reset their password
+   * @param email - user email
+   * @returns {Promise<any>} - success message or error message
+   */
+
+  async forgotPassword(email: string): Promise<any> {
+    await this.userService.findOne(email);
+    return await this.emailPasswordResetService.sendResetLink(email);
+  }
+
+  /**
+   * Verify token from password reset link and update password
+   * @param token - token from email
+   * @param password - new password
+   * @returns {Promise<user | any>}  - Updated user or error message
+   */
+  async resetPassword(token: string, password: string): Promise<User | any> {
+    const user = await this.emailPasswordResetService.decodePasswordResetToken(
+      token,
+    );
+    return await this.userService.updatePassword(user.email, password);
   }
 }

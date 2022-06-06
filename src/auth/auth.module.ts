@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailConfirmationService } from './emailConfirmation.service';
+import { EmailPasswordResetService } from './emailPasswordReset.service';
 
 @Module({
   imports: [
@@ -25,8 +26,9 @@ import { EmailConfirmationService } from './emailConfirmation.service';
   providers: [
     AuthService,
     LocalStrategy,
-    EmailConfirmationService,
     JwtStrategy,
+    EmailConfirmationService,
+    EmailPasswordResetService,
   ],
 })
 export class AuthModule {}

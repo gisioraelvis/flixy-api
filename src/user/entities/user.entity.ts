@@ -1,5 +1,11 @@
 import { CommonEntity } from 'src/common/entities/common.entity';
-import { BeforeInsert, Column, Entity } from 'typeorm';
+import {
+  AfterUpdate,
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+} from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
 
@@ -25,6 +31,7 @@ export class User extends CommonEntity {
   password: string;
 
   @BeforeInsert()
+  @BeforeUpdate()
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
   }

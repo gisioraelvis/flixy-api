@@ -76,6 +76,26 @@ export class UserService {
   }
 
   /**
+   * Update user password
+   * @param email
+   * @param newPassword
+   * @returns {Promise<User | any>} - updated user or error message
+   */
+  async updatePassword(
+    email: string,
+    newPassword: string,
+  ): Promise<User | any> {
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw new NotFoundException('User does not exist');
+    }
+    // Update password in the database - don't use update method of typeorm(din't work with bcrypt)
+    user.password = newPassword;
+    await this.userRepository.save(user);
+    return await this.userRepository.findOne(user.id);
+  }
+
+  /**
    * Mark email as confirmed
    * @param email
    * @returns Boolean

@@ -31,6 +31,12 @@ export class ForgotPasswordDto {
   email: string;
 }
 
+export class ResetPasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+}
+
 export class EmailConfirmationDto {
   @IsString()
   @IsNotEmpty()
