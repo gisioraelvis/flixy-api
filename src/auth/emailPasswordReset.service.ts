@@ -67,7 +67,7 @@ export class EmailPasswordResetService {
     } catch (error) {
       if (error?.name === 'TokenExpiredError') {
         throw new BadRequestException(
-          'Email confirmation token expired, resend email confirmation link',
+          'Password reset link expired, request a new one',
         );
       }
       throw new BadRequestException('Invalid email confirmation token');

@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
-import { ForgotPasswordDto, SignUpDto } from './dto/create-auth.dto';
+import { SignUpDto } from './dto/create-auth.dto';
 import * as bcrypt from 'bcrypt';
 import { EmailConfirmationService } from './emailConfirmation.service';
 import { EmailPasswordResetService } from './emailPasswordReset.service';
@@ -77,13 +77,13 @@ export class AuthService {
   /**
    * Verify token from password reset link and update password
    * @param token - token from email
-   * @param password - new password
-   * @returns {Promise<user | any>}  - Updated user or error message
+   * @param newpassword - new password
+   * @returns {Promise<user | any>} - Updated user or error message
    */
-  async resetPassword(token: string, password: string): Promise<User | any> {
+  async resetPassword(token: string, newpassword: string): Promise<User | any> {
     const user = await this.emailPasswordResetService.decodePasswordResetToken(
       token,
     );
-    return await this.userService.updatePassword(user.email, password);
+    return await this.userService.updatePassword(user.email, newpassword);
   }
 }
