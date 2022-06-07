@@ -5,6 +5,7 @@ import VerificationTokenPayload from './verificationTokenPayload.interface';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserService } from '../user/user.service';
 import { EMAIL_CONFIRMATION_URL } from 'src/common/constants';
+import { join } from 'path';
 
 @Injectable()
 export class EmailConfirmationService {
@@ -32,19 +33,15 @@ export class EmailConfirmationService {
     // Email confirmation link endpoint with jwt token as query param
     const url = `${EMAIL_CONFIRMATION_URL}?token=${token}`;
 
-    // Email body
-    const html = `<p>Welcome to Flixy.</p>
-                  <p>
-                  To confirm your email address, 
-                  click or copy paste the link on your browser: <a href="${url}">${url}</a>
-                  </p>`;
-
     // Send email
     return this.mailerService.sendMail({
       to: email,
       from: 'Flixy New SignUp <no-reply@flixy.com>',
       subject: 'Email confirmation',
-      html,
+      template: 'emailConfirmation',
+      context: {
+        url,
+      },
     });
   }
 

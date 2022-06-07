@@ -11,7 +11,7 @@ export class EmailController {
       to: toEmail,
       from: 'Flixy <no-reply@flixy.com>',
       subject: 'Test email ✔',
-      text: 'Nestjs mailer module test',
+      template: 'testEmail',
     });
     return response;
   }

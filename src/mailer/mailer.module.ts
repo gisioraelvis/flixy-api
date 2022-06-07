@@ -1,7 +1,9 @@
 import { MailerModule } from '@nestjs-modules/mailer';
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { join } from 'path';
 import { EmailController } from './email.controller';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
 @Global()
 @Module({
@@ -15,6 +17,16 @@ import { EmailController } from './email.controller';
           auth: {
             user: configService.get('SMTP_USERNAME'),
             pass: configService.get('SMTP_PASSWORD'),
+          },
+        },
+        defaults: {
+          from: '"Flixy" <noreply@flixy.com>',
+        },
+        template: {
+          dir: join(__dirname + '/templates'),
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
           },
         },
       }),
