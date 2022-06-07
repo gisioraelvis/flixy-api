@@ -37,7 +37,7 @@ export class ForgotPasswordDto {
 export class ResetPasswordDto {
   @IsNotEmpty()
   @IsString()
-  password: string;
+  newpassword: string;
 }
 
 export class EmailConfirmationDto {

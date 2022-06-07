@@ -29,11 +29,11 @@ async function bootstrap() {
       },
     }),
   );
-  app
-    .useGlobalInterceptors
+  app.useGlobalInterceptors(
     // Exludes specified properties(@Exclude() on entity fields) from response
-    //new ClassSerializerInterceptor(app.get(Reflector)),
-    ();
+    new ClassSerializerInterceptor(app.get(Reflector)),
+  );
+
   // Custom logger
   app.useLogger(app.get(CustomLogger));
   const PORT = cofigs.get('PORT');
