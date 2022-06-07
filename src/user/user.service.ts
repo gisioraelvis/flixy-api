@@ -86,6 +86,9 @@ export class UserService {
       throw new ConflictException('Phone Number is already registered');
     }
 
+    // Prevent updating the user password - only the user can update his password
+    // This also solves the bycrypt issue/Typeorm update function issue
+    delete userDto.password;
     await this.userRepository.update({ email }, userDto);
     return await this.userRepository.findOne(user.id);
   }
@@ -123,7 +126,9 @@ export class UserService {
     user.isEmailConfirmed = true;
     // update user status to verified
     user.status = UserAccountStatus.VERIFIED;
-    return await this.userRepository.save(user);
+    await this.userRepository.save(user);
+    // return updated user
+    return await this.userRepository.findOne(user.id);
   }
 
   /**
