@@ -24,6 +24,7 @@
     "mig:rev": "ts-node ./node_modules/.bin/typeorm migration:revert"
   },
   "dependencies": {
+    "@casl/ability": "^5.4.4",
     "@nestjs-modules/mailer": "^1.6.1",
     "@nestjs/common": "^8.0.0",
     "@nestjs/config": "^2.1.0",
