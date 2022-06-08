@@ -34,7 +34,7 @@ export class EmailConfirmationService {
     // Send email
     return this.mailerService.sendMail({
       to: email,
-      from: 'Flixy New SignUp <no-reply@flixy.com>',
+      from: 'Flixy <no-reply@flixy.com>',
       subject: 'Email confirmation',
       template: 'emailConfirmation',
       context: {

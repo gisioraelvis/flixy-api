@@ -31,17 +31,15 @@ export class EmailPasswordResetService {
     // Password reset link endpoint with jwt token as query param
     const url = `${EMAIL_PASSWORD_RESET_URL}?token=${token}`;
 
-    // Email body
-    const html = `<p>To reset your password , 
-                     click or copy paste the link on your browser: <a href="${url}">${url}</a>
-                  </p>`;
-
     // Send email
     return this.mailerService.sendMail({
       to: email,
-      from: 'Flixy Password Reset <no-reply@flixy.com>',
+      from: 'Flixy <no-reply@flixy.com>',
       subject: 'Password Reset',
-      html,
+      template: 'passwordReset',
+      context: {
+        url,
+      },
     });
   }
 
@@ -69,7 +67,7 @@ export class EmailPasswordResetService {
           'Password reset link expired, request a new one',
         );
       }
-      throw new BadRequestException('Invalid email confirmation token');
+      throw new BadRequestException('Invalid link');
     }
   }
 }

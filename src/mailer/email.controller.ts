@@ -10,7 +10,7 @@ export class EmailController {
     const response = await this.mailService.sendMail({
       to: toEmail,
       from: 'Flixy <no-reply@flixy.com>',
-      subject: 'Test email ✔',
+      subject: 'Test email 🚀 ',
       template: 'testEmail',
     });
     return response;
