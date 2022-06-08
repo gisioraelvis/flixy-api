@@ -58,7 +58,6 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
   signIn(@Req() req: RequestWithUser) {
-    console.log(req.user);
     return this.authService.signIn(req.user);
   }
 
@@ -82,7 +81,6 @@ export class AuthController {
     @Query('token') token: string,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
-    console.log(token);
     return this.authService.resetPassword(token, resetPasswordDto.newpassword);
   }
 
