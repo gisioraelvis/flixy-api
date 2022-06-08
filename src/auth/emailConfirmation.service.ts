@@ -5,7 +5,6 @@ import VerificationTokenPayload from './verificationTokenPayload.interface';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserService } from '../user/user.service';
 import { EMAIL_CONFIRMATION_URL } from 'src/common/constants';
-import { join } from 'path';
 
 @Injectable()
 export class EmailConfirmationService {
