@@ -4,7 +4,7 @@ import { Twilio } from 'twilio';
 import { UserService } from '../user/user.service';
 
 @Injectable()
-export default class SmsVerificationService {
+export default class PhoneNumberConfirmationService {
   private twilioClient: Twilio;
 
   constructor(
@@ -22,7 +22,7 @@ export default class SmsVerificationService {
    * @param phoneNumber - User phone number to verify
    * @returns {Promise<any>} - Success or errors
    */
-  initiatePhoneNumberVerification(phoneNumber: string): Promise<any> {
+  phoneNumberConfirmation(phoneNumber: string): Promise<any> {
     const serviceSid = this.configService.get(
       'TWILIO_VERIFICATION_SERVICE_SID',
     );
@@ -53,7 +53,7 @@ export default class SmsVerificationService {
       .verificationChecks.create({ to: phoneNumber, code: verificationCode });
 
     if (!result.valid || result.status !== 'approved') {
-      throw new BadRequestException('Provided verification code is invalid');
+      throw new BadRequestException('Invalid verification code');
     }
 
     return await this.userService.markPhoneNumberConfirmed(email);

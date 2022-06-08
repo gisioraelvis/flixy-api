@@ -21,7 +21,7 @@ import { EmailConfirmationService } from './emailConfirmation.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import RequestWithUser from './requestWithUser.interface';
-import SmsService from './smsVerification.service';
+import SmsService from './phoneNumberConfirmation.service';
 
 @Controller()
 export class AuthController {
@@ -46,7 +46,7 @@ export class AuthController {
   }
 
   // Receives request to resend email confirmation link, user must be signed in
-  @Post('resend-email-confirmation-link')
+  @Get('resend-email-confirmation-link')
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   async resendConfirmationLink(@Req() req: RequestWithUser) {
@@ -84,22 +84,20 @@ export class AuthController {
     return this.authService.resetPassword(token, resetPasswordDto.newpassword);
   }
 
-  // Phone number verification via sms
+  // Phone number confirmation via sms
   // User must be signed in
-  @Get('initiate-phonenumber-verification')
+  @Get('initiate-phone-number-confirmation')
   @UseGuards(JwtAuthGuard)
-  async initiatePhoneNumberVerification(@Req() request: RequestWithUser) {
+  async initiatePhoneNumberConfirmation(@Req() request: RequestWithUser) {
     if (request.user.isPhoneNumberConfirmed) {
-      throw new BadRequestException('Phone number is already verified');
+      throw new BadRequestException('Phone number is already confirmed');
     }
-    await this.smsService.initiatePhoneNumberVerification(
-      request.user.phoneNumber,
-    );
+    await this.smsService.phoneNumberConfirmation(request.user.phoneNumber);
   }
 
-  // Verify phone number
+  // confirm phone number
   // User must be signed in
-  @Post('phonenumber-verification')
+  @Post('confirm-phone-number')
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   async checkVerificationCode(
@@ -107,7 +105,7 @@ export class AuthController {
     @Body() smsVerificationCodeDto: SmsVerificationCodeDto,
   ) {
     if (req.user.isPhoneNumberConfirmed) {
-      throw new BadRequestException('Phone number is already verified');
+      throw new BadRequestException('Phone number is already confirmed');
     }
     await this.smsService.confirmPhoneNumber(
       req.user.email,
