@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import VerificationTokenPayload from './verificationTokenPayload.interface';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserService } from '../user/user.service';
 import { EMAIL_CONFIRMATION_URL } from 'src/common/constants';
@@ -21,7 +20,7 @@ export class EmailConfirmationService {
    * @returns {Promise<any>} - Sent email status or error message
    */
   public sendVerificationLink(email: string): Promise<any> {
-    const payload: VerificationTokenPayload = { email };
+    const payload = { email };
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_EMAIL_VERIFICATION'),
       expiresIn: `${this.configService.get(
