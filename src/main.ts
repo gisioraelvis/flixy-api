@@ -36,8 +36,8 @@ async function bootstrap() {
 
   // Custom logger
   app.useLogger(app.get(CustomLogger));
-  const PORT = cofigs.get('PORT');
-  const HOST = cofigs.get('HOST');
+  const PORT = cofigs.get('APP_PORT');
+  const HOST = cofigs.get('APP_HOST');
   await app.listen(PORT, HOST);
 
   Logger.debug(`App running on ${await app.getUrl()}`);

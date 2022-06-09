@@ -20,8 +20,8 @@ import HttpLogMiddleware from './utils/httpLogMiddleware';
         NODE_ENV: Joi.string()
           .valid('development', 'staging', 'production')
           .default('development'),
-        HOST: Joi.string().default('localhost'),
-        PORT: Joi.number().default(5000),
+        APP_HOST: Joi.string().default('localhost'),
+        APP_PORT: Joi.number().default(5000),
         POSTGRES_HOST: Joi.string().required(),
         POSTGRES_PORT: Joi.number().required(),
         POSTGRES_USER: Joi.string().required(),
