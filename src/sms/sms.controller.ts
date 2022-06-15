@@ -1,18 +1,13 @@
 import {
   Controller,
-  UseGuards,
   UseInterceptors,
   ClassSerializerInterceptor,
   Post,
-  Req,
-  BadRequestException,
   Body,
   HttpCode,
 } from '@nestjs/common';
 import SmsService from './sms.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import RequestWithUser from '../auth/requestWithUser.interface';
-import { SmsDto, SmsVerificationCodeDto } from './createSms.dto';
+import { SmsDto } from './createSms.dto';
 
 @Controller('sms')
 @UseInterceptors(ClassSerializerInterceptor)
