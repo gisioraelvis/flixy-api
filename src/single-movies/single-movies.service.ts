@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { Repository } from 'typeorm';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
@@ -74,11 +75,17 @@ export class SingleMoviesService {
   }
 
   /**
-   * Return all SingleMovies
+   * Return all SingleMovies or paginated
+   * @param paginationQuery - pagination query
    * @returns {Promise<SingleMovie[]>} - all SingleMovies
    */
-  async findAll(): Promise<SingleMovie[]> {
-    return await this.singleMovieRepository.find();
+  async findAll(paginationQuery: PaginationQueryDto): Promise<SingleMovie[]> {
+    const { limit, offset } = paginationQuery;
+    return await this.singleMovieRepository.find({
+      relations: ['genres', 'languages'],
+      take: limit,
+      skip: offset,
+    });
   }
 
   /**

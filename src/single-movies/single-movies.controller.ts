@@ -11,6 +11,7 @@ import {
 import { SingleMoviesService } from './single-movies.service';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @Controller('single-movies')
 export class SingleMoviesController {
@@ -24,11 +25,11 @@ export class SingleMoviesController {
 
   // find all singleMovies
   @Get()
-  findAll() {
-    return this.singleMoviesService.findAll();
+  findAll(@Query() paginationQuery: PaginationQueryDto) {
+    return this.singleMoviesService.findAll(paginationQuery);
   }
 
-  // find a singleMovie by title in query string (?title=...)
+  // find a singleMovie by title
   @Get('/search')
   findByTitle(@Query('title') title: string) {
     return this.singleMoviesService.findByTitle(title);
