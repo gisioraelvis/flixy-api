@@ -7,6 +7,8 @@ import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
 import { Genre } from './entities/genre.entity';
 import { Language } from './entities/language.entity';
 import { SingleMovie } from './entities/single-movie.entity';
+import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
 
 @Injectable()
 export class SingleMoviesService {
@@ -17,6 +19,7 @@ export class SingleMoviesService {
     private readonly genresRepository: Repository<Genre>,
     @InjectRepository(Language)
     private readonly languagesRepository: Repository<Language>,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -43,6 +46,48 @@ export class SingleMoviesService {
       return existingLanguage;
     }
     return this.languagesRepository.create({ name });
+  }
+
+  /**
+   * Upload a singleMovie(poster, trailer, video) - save files to disk
+   * @param movieDetails - new singleMovie
+   * @param files - files to save
+   */
+  async upload(movieDetails: any, files: any[]): Promise<any> {
+    // check if ./uploads/movies/single-movies/ exists - if not create it
+    const uploadsFolder = this.configService.get('UPLOADS_FOLDER');
+    const singleMoviesFolder = `${uploadsFolder}/movies/single-movies`;
+    if (!fs.existsSync(singleMoviesFolder)) {
+      const dir = `${uploadsFolder}/movies/single-movies`;
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    const { title } = movieDetails;
+    // create new folder in ./uploads/movies/single-movies/ with movie title
+    const newMovieFolder = `${singleMoviesFolder}/${title}`;
+    if (!fs.existsSync(newMovieFolder)) {
+      fs.mkdirSync(newMovieFolder);
+    }
+
+    const poster = files.find((file) => file.fieldname === 'poster');
+    const trailer = files.find((file) => file.fieldname === 'trailer');
+    const video = files.find((file) => file.fieldname === 'video');
+    // save files(poster, traier, video) in the newMovieFolder
+    // using their originalname as filename and return path to the file on disk
+    const posterPath = `${newMovieFolder}/${poster.originalname}`;
+    fs.writeFileSync(posterPath, poster.buffer);
+    const trailerPath = `${newMovieFolder}/${trailer.originalname}`;
+    fs.writeFileSync(trailerPath, trailer.buffer);
+    const videoPath = `${newMovieFolder}/${video.originalname}`;
+    fs.writeFileSync(videoPath, video.buffer);
+
+    // return the movie details and files on disk
+    return {
+      ...movieDetails,
+      poster: posterPath,
+      trailer: trailerPath,
+      video: videoPath,
+    };
   }
 
   /**
