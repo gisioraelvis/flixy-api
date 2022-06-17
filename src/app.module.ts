@@ -11,6 +11,8 @@ import { CaslModule } from './casl/casl.module';
 import { SingleMoviesModule } from './single-movies/single-movies.module';
 import * as Joi from 'joi';
 import HttpLogMiddleware from './utils/httpLogMiddleware';
+import { join } from 'path';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [
@@ -43,6 +45,12 @@ import HttpLogMiddleware from './utils/httpLogMiddleware';
         TWILIO_SENDER_PHONE_NUMBER: Joi.string().required(),
         UPLOADS_FOLDER: Joi.string().required(),
       }),
+    }),
+    // makes uploads folder accessible to the client
+    // e.g http://127.0.0.1:5000/uploads/movies/single-movies/single-movie-1/real-hack-screens.jpeg
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
     }),
     AuthModule,
     CommonModule,
