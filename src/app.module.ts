@@ -44,6 +44,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
         TWILIO_VERIFICATION_SERVICE_SID: Joi.string().required(),
         TWILIO_SENDER_PHONE_NUMBER: Joi.string().required(),
         UPLOADS_FOLDER: Joi.string().required(),
+        SINGLE_MOVIES_FOLDER: Joi.string().required(),
       }),
     }),
     // makes uploads folder accessible to the client

@@ -29,13 +29,16 @@ export class SingleMovie extends CommonEntity {
   languages: Language[];
 
   @Column()
-  poster_url: string;
+  poster_name: string;
 
   @Column()
   trailer_url: string;
 
   @Column()
   video_url: string;
+
+  @Column()
+  files_folder: string;
 
   @Column({ default: false })
   is_premiering: boolean;

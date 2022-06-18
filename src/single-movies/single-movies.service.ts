@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { Repository } from 'typeorm';
@@ -49,71 +54,91 @@ export class SingleMoviesService {
   }
 
   /**
-   * Upload a singleMovie(poster, trailer, video) - save files to disk
-   * @param movieDetails - new singleMovie
-   * @param files - files to save
-   */
-  async upload(movieDetails: any, files: any[]): Promise<any> {
-    // check if ./uploads/movies/single-movies/ exists - if not create it
-    const uploadsFolder = this.configService.get('UPLOADS_FOLDER');
-    const singleMoviesFolder = `${uploadsFolder}/movies/single-movies`;
-    if (!fs.existsSync(singleMoviesFolder)) {
-      const dir = `${uploadsFolder}/movies/single-movies`;
-      fs.mkdirSync(dir, { recursive: true });
-    }
-
-    const { title } = movieDetails;
-    // create new folder in ./uploads/movies/single-movies/ with movie title
-    const newMovieFolder = `${singleMoviesFolder}/${title}`;
-    if (!fs.existsSync(newMovieFolder)) {
-      fs.mkdirSync(newMovieFolder);
-    }
-
-    const poster = files.find((file) => file.fieldname === 'poster');
-    const trailer = files.find((file) => file.fieldname === 'trailer');
-    const video = files.find((file) => file.fieldname === 'video');
-    // save files(poster, traier, video) in the newMovieFolder
-    // using their originalname as filename and return path to the file on disk
-    const posterPath = `${newMovieFolder}/${poster.originalname}`;
-    fs.writeFileSync(posterPath, poster.buffer);
-    const trailerPath = `${newMovieFolder}/${trailer.originalname}`;
-    fs.writeFileSync(trailerPath, trailer.buffer);
-    const videoPath = `${newMovieFolder}/${video.originalname}`;
-    fs.writeFileSync(videoPath, video.buffer);
-
-    // return the movie details and files on disk
-    return {
-      ...movieDetails,
-      poster: posterPath,
-      trailer: trailerPath,
-      video: videoPath,
-    };
-  }
-
-  /**
    * Create a new singleMovie
    * @param createSingleMovieDto - new singleMovie
    * @returns {Promise<SingleMovie>} - created singleMovie
    */
   async create(
     createSingleMovieDto: CreateSingleMovieDto,
+    files: any[],
   ): Promise<SingleMovie> {
+    // check that files array is not empty or undefined
+    // files must be provided
+    if (!files || files.length === 0) {
+      throw new NotFoundException(
+        'Poster, Trailer and Video files are required',
+      );
+    }
+
+    // check if ./uploads/movies/single-movies/ folders exists - if not create them/it
+    const singleMoviesFolder = this.configService.get('SINGLE_MOVIES_FOLDER');
+    if (!fs.existsSync(singleMoviesFolder)) {
+      fs.mkdirSync(singleMoviesFolder, { recursive: true });
+    }
+
+    const { title } = createSingleMovieDto;
+    // create new folder in SINGLE_MOVIES_FOLDER with current date-time and movie title
+    //if it exists, throw ConflictException
+    const currentDateTime = new Date().toISOString();
+    const folderName = `${currentDateTime}-${title}`;
+    const newSingleMovieFolder = `${singleMoviesFolder}/${folderName}`;
+    if (!fs.existsSync(newSingleMovieFolder)) {
+      fs.mkdirSync(newSingleMovieFolder);
+    } else {
+      throw new ConflictException(`${title} folder already exists`);
+    }
+
+    // get the movie files(poster, trailer, video) from the files array
+    // if any doesn't exist, raise a not exception
+    const poster = files.find((file) => file.fieldname === 'poster');
+    if (!poster) {
+      throw new NotFoundException('Poster not found');
+    }
+    const trailer = files.find((file) => file.fieldname === 'trailer');
+    if (!trailer) {
+      throw new NotFoundException('Trailer not found');
+    }
+    const video = files.find((file) => file.fieldname === 'video');
+    if (!video) {
+      throw new NotFoundException('Video not found');
+    }
+    // save files in the newSingleMovieFolder using their fieldname and originalname as filename
+    const posterNameOnDisk = `${poster.fieldname}-${poster.originalname}`;
+    const posterPath = `${newSingleMovieFolder}/${posterNameOnDisk}`;
+    fs.writeFileSync(posterPath, poster.buffer);
+
+    const trailerPath = `${newSingleMovieFolder}/${trailer.fieldname}-${trailer.originalname}`;
+    fs.writeFileSync(trailerPath, trailer.buffer);
+
+    const videoPath = `${newSingleMovieFolder}/${video.fieldname}-${video.originalname}`;
+    fs.writeFileSync(videoPath, video.buffer);
+
+    // parse genres and languages from string to array
+    const { genres, languages } = createSingleMovieDto;
+    const genresArray = genres.split(',').map((genre) => genre.trim());
+    const languagesArray = languages
+      .split(',')
+      .map((language) => language.trim());
+
     // save genres
-    const genres = await Promise.all(
-      createSingleMovieDto.genres.map((name) => this.preloadGenresByName(name)),
+    const genresId = await Promise.all(
+      genresArray.map((name) => this.preloadGenresByName(name)),
     );
 
     // save languages
-    const languages = await Promise.all(
-      createSingleMovieDto.languages.map((name) =>
-        this.preloadLanguagesByName(name),
-      ),
+    const languagesId = await Promise.all(
+      languagesArray.map((name) => this.preloadLanguagesByName(name)),
     );
 
+    // create and save the new singleMovie
     const newSingleMovie = this.singleMovieRepository.create({
       ...createSingleMovieDto,
-      genres,
-      languages,
+      genres: genresId,
+      languages: languagesId,
+      poster_name: posterNameOnDisk,
+      trailer_url: trailerPath,
+      video_url: videoPath,
+      files_folder: newSingleMovieFolder,
     });
     await this.singleMovieRepository.save(newSingleMovie);
     return newSingleMovie;
@@ -170,38 +195,109 @@ export class SingleMoviesService {
   async update(
     id: number,
     updateSingleMovieDto: UpdateSingleMovieDto,
+    files: any[],
   ): Promise<SingleMovie> {
+    const singleMovie = await this.singleMovieRepository.findOne(id);
+    if (!singleMovie) {
+      throw new NotFoundException(`SingleMovie with id ${id} not found`);
+    }
+    const { genres, languages } = updateSingleMovieDto;
+
+    // parse genres and languages from string to array
+    let genresArray: any[];
+    // if genres is not empty, parse it to array
+    if (genres) {
+      genresArray = genres.split(',').map((genre) => genre.trim());
+    }
+    let languagesArray: any[];
+    // if languages is not empty, parse it to array
+    if (languages) {
+      languagesArray = languages.split(',').map((language) => language.trim());
+    }
+
     // update genres if any were provided
-    const genres =
+    const genresId =
       updateSingleMovieDto.genres &&
       (await Promise.all(
-        updateSingleMovieDto.genres.map((name) =>
-          this.preloadGenresByName(name),
-        ),
+        genresArray.map((name) => this.preloadGenresByName(name)),
       ));
 
     // update languages if any were provided
-    const languages =
+    const languagesId =
       updateSingleMovieDto.languages &&
       (await Promise.all(
-        updateSingleMovieDto.languages.map((name) =>
-          this.preloadLanguagesByName(name),
-        ),
+        languagesArray.map((name) => this.preloadLanguagesByName(name)),
       ));
 
+    // if newposter is provided
+    // delete the old poster and save the new one
+    if (files.find((file) => file.fieldname === 'poster')) {
+      const oldPoster = `${singleMovie.files_folder}/${singleMovie.poster_name}`;
+      console.log(oldPoster);
+      try {
+        fs.unlinkSync(oldPoster);
+      } catch (error) {
+        throw new InternalServerErrorException('Error deleting old poster');
+      }
+
+      const poster = files.find((file) => file.fieldname === 'poster');
+      const newPosterNameOnDisk = `${poster.fieldname}-${poster.originalname}`;
+      const posterPath = `${singleMovie.files_folder}/${newPosterNameOnDisk}`;
+      fs.writeFileSync(posterPath, poster.buffer);
+      updateSingleMovieDto.poster_name = newPosterNameOnDisk;
+    }
+
+    // if newtrailer is provided
+    // delete the old trailer and save the new one
+    if (files.find((file) => file.fieldname === 'trailer')) {
+      const oldTrailer = singleMovie.trailer_url;
+      try {
+        fs.unlinkSync(oldTrailer);
+      } catch (error) {
+        throw new InternalServerErrorException('Error deleting old trailer');
+      }
+      const trailer = files.find((file) => file.fieldname === 'trailer');
+      const trailerPath = `${singleMovie.files_folder}/${trailer.fieldname}-${trailer.originalname}`;
+      fs.writeFileSync(trailerPath, trailer.buffer);
+      updateSingleMovieDto.trailer_url = trailerPath;
+    }
+
+    // if newvideo is provided
+    // delete the old video and save the new one
+    if (files.find((file) => file.fieldname === 'video')) {
+      const oldVideo = singleMovie.video_url;
+      try {
+        fs.unlinkSync(oldVideo);
+      } catch (error) {
+        throw new InternalServerErrorException('Error deleting old video');
+      }
+      const video = files.find((file) => file.fieldname === 'video');
+      const videoPath = `${singleMovie.files_folder}/${video.fieldname}-${video.originalname}`;
+      fs.writeFileSync(videoPath, video.buffer);
+      updateSingleMovieDto.video_url = videoPath;
+    }
+
+    const singleMoviesFolder = this.configService.get('SINGLE_MOVIES_FOLDER');
+    // if the movie title is changed update the folder name
+    if (updateSingleMovieDto.title !== singleMovie.title) {
+      const oldFolder = singleMovie.files_folder;
+      console.log(oldFolder);
+      const currentDateTime = new Date().toISOString();
+      const folderName = `${currentDateTime}-${updateSingleMovieDto.title}`;
+      const newFolder = `${singleMoviesFolder}/${folderName}`;
+      fs.renameSync(oldFolder, newFolder);
+      updateSingleMovieDto.files_folder = newFolder;
+      console.log(newFolder);
+    }
     // update singleMovie
     const updatedSingleMovie = await this.singleMovieRepository.preload({
       id: +id,
       ...updateSingleMovieDto,
-      genres,
-      languages,
+      genres: genresId,
+      languages: languagesId,
     });
 
-    if (!updatedSingleMovie) {
-      throw new NotFoundException(`SingleMovie with id ${id} not found`);
-    }
-    await this.singleMovieRepository.save(updatedSingleMovie);
-    return updatedSingleMovie;
+    return await this.singleMovieRepository.save(updatedSingleMovie);
   }
 
   /**
@@ -211,10 +307,30 @@ export class SingleMoviesService {
    */
   async remove(id: number): Promise<any> {
     const singleMovie = await this.singleMovieRepository.findOne(id);
+
     if (!singleMovie) {
-      throw new NotFoundException(`SingleMovie with id ${id} not found`);
+      throw new NotFoundException(`Single Movie with id ${id} does not exist`);
     }
+
+    const singleMoviesFolder = singleMovie.files_folder;
+    console.log(singleMoviesFolder);
+
+    // Raise exception if the singleMovie folder doesn't exist
+    if (!fs.existsSync(singleMoviesFolder)) {
+      throw new NotFoundException(`${singleMovie.title} folder not found`);
+    } else {
+      fs.rm(singleMoviesFolder, { recursive: true }, (err) => {
+        if (err) {
+          throw new InternalServerErrorException(
+            `Error deleting ${singleMovie.title} folder`,
+          );
+        }
+      });
+    }
+
+    // delete singleMovie from database
     await this.singleMovieRepository.delete(id);
-    return { message: `SingleMovie with id ${id} deleted` };
+
+    return { message: `${singleMovie.title} deleted` };
   }
 }

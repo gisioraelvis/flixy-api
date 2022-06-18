@@ -9,14 +9,12 @@ import {
   Query,
   UploadedFiles,
   UseInterceptors,
-  Res,
 } from '@nestjs/common';
 import { SingleMoviesService } from './single-movies.service';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
 
 @Controller('single-movies')
 export class SingleMoviesController {
@@ -24,19 +22,13 @@ export class SingleMoviesController {
 
   // create a new singleMovie
   @Post('/create')
-  create(@Body() createSingleMovieDto: CreateSingleMovieDto) {
-    return this.singleMoviesService.create(createSingleMovieDto);
-  }
-
-  @Post('upload')
   @UseInterceptors(AnyFilesInterceptor())
-  upload(
-    @Body() movieDetails: any,
+  create(
+    @Body() createSingleMovieDto: CreateSingleMovieDto,
     @UploadedFiles()
-    files: Express.Multer.File[],
-    @Res({ passthrough: true }) res: Response,
+    files: Array<Express.Multer.File>,
   ) {
-    return this.singleMoviesService.upload(movieDetails, files);
+    return this.singleMoviesService.create(createSingleMovieDto, files);
   }
 
   // find all singleMovies
@@ -59,11 +51,13 @@ export class SingleMoviesController {
 
   // update a singleMovie given its id
   @Patch(':id')
+  @UseInterceptors(AnyFilesInterceptor())
   update(
     @Param('id') id: string,
     @Body() updateSingleMovieDto: UpdateSingleMovieDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return this.singleMoviesService.update(+id, updateSingleMovieDto);
+    return this.singleMoviesService.update(+id, updateSingleMovieDto, files);
   }
 
   // delete a singleMovie given its id
