@@ -14,10 +14,10 @@ export class CreateSingleMovieDto {
   duration: string;
 
   @IsNotEmpty()
-  genres: string;
+  genres: any;
 
   @IsNotEmpty()
-  languages: string;
+  languages: any;
 
   @IsNotEmpty()
   is_premiering: boolean;
@@ -25,7 +25,7 @@ export class CreateSingleMovieDto {
   @IsNotEmpty()
   price: string;
 
-  poster_name: string;
+  poster_url: string;
   trailer_url: string;
   video_url: string;
   files_folder: string;

@@ -29,7 +29,7 @@ export class SingleMovie extends CommonEntity {
   languages: Language[];
 
   @Column()
-  poster_name: string;
+  poster_url: string;
 
   @Column()
   trailer_url: string;
