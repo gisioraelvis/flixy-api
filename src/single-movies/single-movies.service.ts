@@ -1,6 +1,4 @@
 import {
-  BadRequestException,
-  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -14,11 +12,12 @@ import { Genre } from './entities/genre.entity';
 import { Language } from './entities/language.entity';
 import { SingleMovie } from './entities/single-movie.entity';
 import { ConfigService } from '@nestjs/config';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import {
   commaSeparatedStringToArray,
-  stripSanitizeAndHyphenate,
+  stripAndHyphenate,
 } from 'src/utils/utils';
+import { PathLike } from 'fs';
 
 @Injectable()
 export class SingleMoviesService {
@@ -75,23 +74,28 @@ export class SingleMoviesService {
       );
     }
 
-    // check if ./uploads/movies/single-movies/ folders exists - if not create them/it
+    // Get the single movies directory path from env
     const singleMoviesFolder = this.configService.get('SINGLE_MOVIES_FOLDER');
-    if (!fs.existsSync(singleMoviesFolder)) {
-      fs.mkdirSync(singleMoviesFolder, { recursive: true });
+    try {
+      // create folder
+      await fs.mkdir(singleMoviesFolder, { recursive: true });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Error creating single movies folder`,
+      );
     }
 
-    const currentDateTime = new Date().toISOString();
-
     // create new folder in SINGLE_MOVIES_FOLDER with current date-time and movie title
-    //if it exists, throw ConflictException
-    const title = stripSanitizeAndHyphenate(createSingleMovieDto.title);
+    const currentDateTime = new Date().toISOString();
+    const title = stripAndHyphenate(createSingleMovieDto.title);
     const folderName = `${currentDateTime}-${title}`;
     const newSingleMovieFolder = `${singleMoviesFolder}/${folderName}`;
-    if (!fs.existsSync(newSingleMovieFolder)) {
-      fs.mkdirSync(newSingleMovieFolder);
-    } else {
-      throw new ConflictException(`${title} folder already exists`);
+    try {
+      await fs.mkdir(newSingleMovieFolder);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error creating new single movies folder',
+      );
     }
 
     // if poster or trailer or video file is not found, throw NotFoundException
@@ -109,17 +113,24 @@ export class SingleMoviesService {
     }
 
     // save files in the newSingleMovieFolder using their fieldname and originalname as filename
-    const posterOriginalname = stripSanitizeAndHyphenate(poster.originalname);
-    const posterPath = `${newSingleMovieFolder}/${poster.fieldname}-${posterOriginalname}`;
-    fs.writeFileSync(posterPath, poster.buffer);
+    let posterPath: PathLike | fs.FileHandle;
+    let trailerPath: PathLike | fs.FileHandle;
+    let videoPath: PathLike | fs.FileHandle;
+    try {
+      const posterOriginalname = stripAndHyphenate(poster.originalname);
+      posterPath = `${newSingleMovieFolder}/${poster.fieldname}-${posterOriginalname}`;
+      await fs.writeFile(posterPath, poster.buffer);
 
-    const trailerOriginalname = stripSanitizeAndHyphenate(trailer.originalname);
-    const trailerPath = `${newSingleMovieFolder}/${trailer.fieldname}-${trailerOriginalname}`;
-    fs.writeFileSync(trailerPath, trailer.buffer);
+      const trailerOriginalname = stripAndHyphenate(trailer.originalname);
+      trailerPath = `${newSingleMovieFolder}/${trailer.fieldname}-${trailerOriginalname}`;
+      await fs.writeFile(trailerPath, trailer.buffer);
 
-    const videoOriginalname = stripSanitizeAndHyphenate(video.originalname);
-    const videoPath = `${newSingleMovieFolder}/${video.fieldname}-${videoOriginalname}`;
-    fs.writeFileSync(videoPath, video.buffer);
+      const videoOriginalname = stripAndHyphenate(video.originalname);
+      videoPath = `${newSingleMovieFolder}/${video.fieldname}-${videoOriginalname}`;
+      await fs.writeFile(videoPath, video.buffer);
+    } catch (error) {
+      throw new InternalServerErrorException('Error saving single movie files');
+    }
 
     // parse genres from string to array
     const genresArray = commaSeparatedStringToArray(
@@ -208,19 +219,11 @@ export class SingleMoviesService {
   ): Promise<SingleMovie> {
     const singleMovie = await this.singleMovieRepository.findOne(id);
     if (!singleMovie) {
-      throw new NotFoundException(`SingleMovie with id ${id} not found`);
+      throw new NotFoundException(`SingleMovie with id ${id} does not exist`);
     }
 
-    // if the movie title is changed, alert the user that will require to delete the current
-    // singleMovie (from db and disk) then create a new one with the new title
-    // This is because the title is used as the folder name which is used by the
-    // poster, trailer and video paths, changing the title will necessitate renaming
-    // the folder and the files,(believe me it's a pain this is the best alternative)
-    if (updateSingleMovieDto.title !== singleMovie.title) {
-      throw new BadRequestException(
-        'To change the movie title, delete current movie then create a new one with the new title',
-      );
-    }
+    // Even if the movie title is changed, retain the old folder name
+    // to avoid having to update the files_folder, poster_url, trailer_url and video_url
 
     const { genres, languages } = updateSingleMovieDto;
 
@@ -256,15 +259,23 @@ export class SingleMoviesService {
     if (files.find((file) => file.fieldname === 'poster')) {
       const oldPoster = singleMovie.poster_url;
       try {
-        fs.unlinkSync(oldPoster);
+        await fs.unlink(oldPoster);
       } catch (error) {
-        throw new InternalServerErrorException('Error deleting old poster');
+        throw new InternalServerErrorException(
+          'Error deleting old poster from disk',
+        );
       }
 
       const poster = files.find((file) => file.fieldname === 'poster');
-      const posterOriginalname = stripSanitizeAndHyphenate(poster.originalname);
+      const posterOriginalname = stripAndHyphenate(poster.originalname);
       const posterPath = `${singleMovie.files_folder}/${poster.fieldname}-${posterOriginalname}`;
-      fs.writeFileSync(posterPath, poster.buffer);
+      try {
+        await fs.writeFile(posterPath, poster.buffer);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Error saving new poster to disk',
+        );
+      }
       updateSingleMovieDto.poster_url = posterPath;
     }
 
@@ -273,16 +284,22 @@ export class SingleMoviesService {
     if (files.find((file) => file.fieldname === 'trailer')) {
       const oldTrailer = singleMovie.trailer_url;
       try {
-        fs.unlinkSync(oldTrailer);
+        fs.unlink(oldTrailer);
       } catch (error) {
-        throw new InternalServerErrorException('Error deleting old trailer');
+        throw new InternalServerErrorException(
+          'Error deleting old trailer from disk',
+        );
       }
       const trailer = files.find((file) => file.fieldname === 'trailer');
-      const trailerOriginalname = stripSanitizeAndHyphenate(
-        trailer.originalname,
-      );
+      const trailerOriginalname = stripAndHyphenate(trailer.originalname);
       const trailerPath = `${singleMovie.files_folder}/${trailer.fieldname}-${trailerOriginalname}`;
-      fs.writeFileSync(trailerPath, trailer.buffer);
+      try {
+        await fs.writeFile(trailerPath, trailer.buffer);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Error saving new trailer to disk',
+        );
+      }
       updateSingleMovieDto.trailer_url = trailerPath;
     }
 
@@ -291,14 +308,22 @@ export class SingleMoviesService {
     if (files.find((file) => file.fieldname === 'video')) {
       const oldVideo = singleMovie.video_url;
       try {
-        fs.unlinkSync(oldVideo);
+        await fs.unlink(oldVideo);
       } catch (error) {
-        throw new InternalServerErrorException('Error deleting old video');
+        throw new InternalServerErrorException(
+          'Error deleting old video from disk',
+        );
       }
       const video = files.find((file) => file.fieldname === 'video');
-      const videoOriginalname = stripSanitizeAndHyphenate(video.originalname);
+      const videoOriginalname = stripAndHyphenate(video.originalname);
       const videoPath = `${singleMovie.files_folder}/${video.fieldname}-${videoOriginalname}`;
-      fs.writeFileSync(videoPath, video.buffer);
+      try {
+        await fs.writeFile(videoPath, video.buffer);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'Error saving new video to disk',
+        );
+      }
       updateSingleMovieDto.video_url = videoPath;
     }
 
@@ -325,22 +350,17 @@ export class SingleMoviesService {
     }
 
     const singleMoviesFolder = singleMovie.files_folder;
-    console.log(singleMoviesFolder);
 
     // Raise exception if the singleMovie folder doesn't exist
-    if (!fs.existsSync(singleMoviesFolder)) {
-      throw new NotFoundException(`${singleMovie.title} folder not found`);
-    } else {
-      fs.rm(singleMoviesFolder, { recursive: true }, (err) => {
-        if (err) {
-          throw new InternalServerErrorException(
-            `Error deleting ${singleMovie.title} folder`,
-          );
-        }
-      });
+    try {
+      await fs.rm(singleMoviesFolder, { recursive: true });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Error deleting single movie folder from disk`,
+      );
     }
 
-    // delete singleMovie from database
+    // delete singleMovie from the db
     await this.singleMovieRepository.delete(id);
 
     return { message: `${singleMovie.title} deleted` };

@@ -5,7 +5,7 @@
  * @param {string} str - string to be slugified
  * @returns {string} - slugified string
  */
-export const stripSanitizeAndHyphenate = (str: string): string => {
+export const stripAndHyphenate = (str: string): string => {
   return str.trim().toLowerCase().replace(/\s+/g, '-');
 };
 
