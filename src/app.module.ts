@@ -45,6 +45,10 @@ import { ServeStaticModule } from '@nestjs/serve-static';
         TWILIO_SENDER_PHONE_NUMBER: Joi.string().required(),
         UPLOADS_FOLDER: Joi.string().required(),
         SINGLE_MOVIES_FOLDER: Joi.string().required(),
+        AWS_REGION: Joi.string().required(),
+        AWS_ACCESS_KEY_ID: Joi.string().required(),
+        AWS_SECRET_ACCESS_KEY: Joi.string().required(),
+        AWS_PUBLIC_BUCKET_NAME: Joi.string().required(),
       }),
     }),
     // makes uploads folder accessible to the client

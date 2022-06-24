@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { config } from 'aws-sdk';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import CustomLogger from './logger/customLogger';
@@ -16,7 +17,7 @@ async function bootstrap() {
     bufferLogs: true,
   });
   // env variables
-  const cofigs = app.get(ConfigService);
+  const configService = app.get(ConfigService);
   app.use(helmet());
   app.enableCors();
   // i.e /api/v1
@@ -35,10 +36,15 @@ async function bootstrap() {
     new ClassSerializerInterceptor(app.get(Reflector)),
   );
 
+  config.update({
+    accessKeyId: configService.get('AWS_ACCESS_KEY_ID'),
+    secretAccessKey: configService.get('AWS_SECRET_ACCESS_KEY'),
+    region: configService.get('AWS_REGION'),
+  });
   // Custom logger
   app.useLogger(app.get(CustomLogger));
-  const PORT = cofigs.get('APP_PORT');
-  const HOST = cofigs.get('APP_HOST');
+  const PORT = configService.get('APP_PORT');
+  const HOST = configService.get('APP_HOST');
   await app.listen(PORT, HOST);
 
   Logger.debug(`App running on ${await app.getUrl()}`);
