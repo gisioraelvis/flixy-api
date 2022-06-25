@@ -37,6 +37,7 @@
     "@nestjs/typeorm": "^8.0.4",
     "@types/aws-sdk": "^2.7.0",
     "@types/nodemailer": "^6.4.4",
+    "@types/uuid": "^8.3.4",
     "aws-sdk": "^2.1161.0",
     "bcrypt": "^5.0.1",
     "class-transformer": "^0.5.1",
@@ -55,7 +56,8 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "twilio": "^3.77.2",
-    "typeorm": "^0.2.45"
+    "typeorm": "^0.2.45",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",

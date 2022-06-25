@@ -13,6 +13,8 @@ import * as Joi from 'joi';
 import HttpLogMiddleware from './utils/httpLogMiddleware';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { FilesModule } from './s3-public-files/files.module';
+import { PrivateFilesModule } from './s3-private-files/private-files.module';
 
 @Module({
   imports: [
@@ -49,6 +51,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
         AWS_ACCESS_KEY_ID: Joi.string().required(),
         AWS_SECRET_ACCESS_KEY: Joi.string().required(),
         AWS_PUBLIC_BUCKET_NAME: Joi.string().required(),
+        AWS_PRIVATE_BUCKET_NAME: Joi.string().required(),
       }),
     }),
     // makes uploads folder accessible to the client
@@ -65,6 +68,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     SmsModule,
     CaslModule,
     SingleMoviesModule,
+    FilesModule,
+    PrivateFilesModule,
   ],
   controllers: [],
 })

@@ -1,7 +1,8 @@
 import { CommonEntity } from 'src/common/entities/common.entity';
-import { BeforeInsert, BeforeUpdate, Column, Entity } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
+import PrivateFile from 'src/s3-private-files/entities/private-file.entity';
 
 export enum UserAccountStatus {
   PENDING = 'PENDING',
@@ -53,4 +54,7 @@ export class User extends CommonEntity {
 
   @Column({ default: false })
   isContentCreator: boolean;
+
+  @OneToMany(() => PrivateFile, (file: PrivateFile) => file.owner)
+  public files: PrivateFile[];
 }

@@ -160,4 +160,19 @@ export class UserService {
     }
     return { message: 'User deleted' };
   }
+  /**
+   * Gets all user private files
+   * @param userId
+   * @returns {Promise<any>}
+   */
+  async getAllPrivateFiles(userId: number): Promise<any> {
+    const userWithFiles = await this.userRepository.findOne(
+      { id: userId },
+      { relations: ['files'] },
+    );
+    if (userWithFiles) {
+      return userWithFiles.files;
+    }
+    throw new NotFoundException(`User with id ${userId} not found`);
+  }
 }
