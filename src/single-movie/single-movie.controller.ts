@@ -10,7 +10,7 @@ import {
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { SingleMoviesService } from './single-movies.service';
+import { SingleMoviesService } from './single-movie.service';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';

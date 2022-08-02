@@ -8,7 +8,7 @@ import { LoggerModule } from './logger/logger.module';
 import { AppMailerModule } from './mailer/mailer.module';
 import { SmsModule } from './sms/sms.module';
 import { CaslModule } from './casl/casl.module';
-import { SingleMoviesModule } from './single-movies/single-movies.module';
+import { SingleMoviesModule } from './single-movie/single-movie.module';
 import * as Joi from 'joi';
 import HttpLogMiddleware from './utils/httpLogMiddleware';
 import { join } from 'path';

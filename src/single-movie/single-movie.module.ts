@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { SingleMoviesService } from './single-movies.service';
-import { SingleMoviesController } from './single-movies.controller';
+import { SingleMoviesService } from './single-movie.service';
+import { SingleMoviesController } from './single-movie.controller';
 import { CommonModule } from 'src/common/common.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Genre } from './entities/genre.entity';
