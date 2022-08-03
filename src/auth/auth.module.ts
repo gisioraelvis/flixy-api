@@ -10,6 +10,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailConfirmationService } from './emailConfirmation.service';
 import { EmailPasswordResetService } from './emailPasswordReset.service';
 import PhoneNumberConfirmationService from './phoneNumberConfirmation.service';
+import { PasswordService } from './password.service';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import PhoneNumberConfirmationService from './phoneNumberConfirmation.service';
     EmailConfirmationService,
     EmailPasswordResetService,
     PhoneNumberConfirmationService,
+    PasswordService,
   ],
 })
 export class AuthModule {}

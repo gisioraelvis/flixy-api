@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -51,7 +57,7 @@ export class EmailConfirmationService {
   public async confirmEmail(email: string): Promise<any> {
     const user = await this.userService.findOne(email);
     if (user.isEmailConfirmed) {
-      throw new BadRequestException('Email already confirmed');
+      throw new Error('EMAIL_CONFIRMED');
     }
     return await this.userService.markEmailAsConfirmed(email);
   }
@@ -77,6 +83,11 @@ export class EmailConfirmationService {
       if (error?.name === 'TokenExpiredError') {
         throw new BadRequestException('Email confirmation token expired');
       }
+
+      if (error.message === 'EMAIL_CONFIRMED') {
+        throw new ConflictException('Email already confirmed');
+      }
+
       throw new BadRequestException('Invalid email confirmation token');
     }
   }

@@ -67,7 +67,8 @@ export class EmailPasswordResetService {
           'Password reset link expired, request a new one',
         );
       }
-      throw new BadRequestException('Invalid link');
+      // if token is invalid
+      throw new BadRequestException('Invalid token');
     }
   }
 }

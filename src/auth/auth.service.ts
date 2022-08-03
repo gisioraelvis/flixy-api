@@ -2,10 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { SignUpDto } from './dto/create-auth.dto';
-import * as bcrypt from 'bcrypt';
 import { EmailConfirmationService } from './emailConfirmation.service';
 import { EmailPasswordResetService } from './emailPasswordReset.service';
 import { User } from 'src/user/entities/user.entity';
+import { PasswordService } from './password.service';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +15,7 @@ export class AuthService {
     private readonly emailConfirmationService: EmailConfirmationService,
     private readonly jwtService: JwtService,
     private readonly emailPasswordResetService: EmailPasswordResetService,
+    private passwordService: PasswordService,
   ) {}
 
   /**
@@ -44,7 +45,11 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     // Call the UserService from the UserModule
     const user = await this.userService.findOne(email);
-    const isValidPassword = await bcrypt.compare(password, user.password);
+
+    const isValidPassword = await this.passwordService.validatePassword(
+      password,
+      user.password,
+    );
     if (!isValidPassword) {
       throw new UnauthorizedException('Invalid credentials');
     }

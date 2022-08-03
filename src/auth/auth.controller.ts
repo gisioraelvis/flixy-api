@@ -40,7 +40,7 @@ export class AuthController {
   // Receives token from email confirmation link
   @Get('confirm-email')
   async confirm(@Query() emailConfirmationDto: EmailConfirmationDto) {
-    await this.emailConfirmationService.decodeConfirmationToken(
+    return await this.emailConfirmationService.decodeConfirmationToken(
       emailConfirmationDto.token,
     );
   }
@@ -50,7 +50,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   async resendConfirmationLink(@Req() req: RequestWithUser) {
-    await this.emailConfirmationService.resendConfirmationLink(req.user.email);
+    return await this.emailConfirmationService.resendConfirmationLink(
+      req.user.email,
+    );
   }
 
   // User signin with email and password

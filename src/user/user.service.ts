@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PasswordService } from 'src/auth/password.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -14,6 +16,8 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private prisma: PrismaService,
+    private passwordService: PasswordService,
   ) {}
 
   /**
@@ -21,21 +25,30 @@ export class UserService {
    * @params userDto - email, phoneNumber, password
    * @returns {Promise<User>} - created user
    */
-  async create(userDto: CreateUserDto): Promise<User> {
+  async create(userDto: CreateUserDto): Promise<User | any> {
     const { email, phoneNumber } = userDto;
-    const userEmail = await this.userRepository.findOne({ email });
 
+    const userEmail = await this.prisma.user.findUnique({ where: { email } });
     // Email already registered
     if (userEmail) {
       throw new ConflictException('Email is already registered');
     }
+
+    const userPhoneNumber = await this.prisma.user.findUnique({
+      where: { phoneNumber },
+    });
     // Phone number already registered
-    const userPhoneNumber = await this.userRepository.findOne({ phoneNumber });
     if (userPhoneNumber) {
       throw new ConflictException('Phone Number is already registered');
     }
-    const newUser = this.userRepository.create(userDto);
-    await this.userRepository.save(newUser);
+
+    // Create user
+    const newUser = await this.prisma.user.create({
+      data: {
+        ...userDto,
+      },
+    });
+
     return newUser;
   }
 
@@ -43,8 +56,8 @@ export class UserService {
    * Return all Users
    * @returns {Promise<User[]>}
    */
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+  async findAll(): Promise<User[] | any> {
+    return await this.prisma.user.findMany();
   }
 
   /**
@@ -52,8 +65,8 @@ export class UserService {
    * @param email
    * @returns {Promise<User>} - User
    */
-  async findOne(email: string): Promise<User> {
-    const user = await this.userRepository.findOne({ email });
+  async findOne(email: string): Promise<User | any> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -65,32 +78,40 @@ export class UserService {
    * @params email and UpdateUserDto
    * @returns {Promise<User>} - updated user
    */
-  async update(email: string, userDto: UpdateUserDto): Promise<User> {
-    const user = await this.userRepository.findOne({ email });
+  async update(email: string, userDto: UpdateUserDto): Promise<User | any> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    // Before updating the user, check if the email is already registered
-    const userEmail = await this.userRepository.findOne({
-      email: userDto.email,
+
+    const userEmail = await this.prisma.user.findUnique({
+      where: { email: userDto.email },
     });
+    //Check if the new provided email is already registered by another user
     if (userEmail && userEmail.id !== user.id) {
       throw new ConflictException('Email is already registered');
     }
 
-    // Before updating the user, check if the phone number is already registered
-    const userPhoneNumber = await this.userRepository.findOne({
-      phoneNumber: userDto.phoneNumber,
+    // Check if the phone number is already registered by another user
+    const userPhoneNumber = await this.prisma.user.findUnique({
+      where: { phoneNumber: userDto.phoneNumber },
     });
     if (userPhoneNumber && userPhoneNumber.id !== user.id) {
       throw new ConflictException('Phone Number is already registered');
     }
 
-    // Prevent updating the user password - only the user can update his password
-    // This also solves the bycrypt issue/Typeorm update function issue
+    // Prevent updating the user password - only the user should update his password
     delete userDto.password;
-    await this.userRepository.update({ email }, userDto);
-    return await this.userRepository.findOne(user.id);
+
+    // Update user
+    const updatedUser = await this.prisma.user.update({
+      where: { email },
+      data: {
+        ...userDto,
+      },
+    });
+
+    return updatedUser;
   }
 
   /**
@@ -103,14 +124,23 @@ export class UserService {
     email: string,
     newPassword: string,
   ): Promise<User | any> {
-    const user = await this.userRepository.findOne({ email });
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new NotFoundException('User does not exist');
     }
-    // Update password in the database - don't use update method of typeorm(din't work with bcrypt)
-    user.password = newPassword;
-    await this.userRepository.save(user);
-    return await this.userRepository.findOne(user.id);
+
+    // Hash the new password
+    const hashedNewPassword = await this.passwordService.hashPassword(
+      newPassword,
+    );
+
+    // Update password in the database
+    const updatedUser = await this.prisma.user.update({
+      where: { email },
+      data: { password: hashedNewPassword },
+    });
+
+    return updatedUser;
   }
 
   /**
@@ -119,16 +149,18 @@ export class UserService {
    * @returns {Promise<User>} - Updated user
    */
   async markEmailAsConfirmed(email: string): Promise<any> {
-    const user = await this.userRepository.findOne({ email });
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    user.isEmailConfirmed = true;
-    // update user status to verified
-    user.status = UserAccountStatus.VERIFIED;
-    await this.userRepository.save(user);
-    // return updated user
-    return await this.userRepository.findOne(user.id);
+
+    // update user email confirmed to true and status to verified
+    const updatedUser = await this.prisma.user.update({
+      where: { email },
+      data: { isEmailConfirmed: true, status: UserAccountStatus.VERIFIED },
+    });
+
+    return updatedUser;
   }
 
   /**
@@ -137,14 +169,21 @@ export class UserService {
    * @returns {Promise<User>} - Updated user
    */
   async markPhoneNumberConfirmed(email: string): Promise<any> {
-    const user = await this.userRepository.findOne({ email });
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    user.isPhoneNumberConfirmed = true;
-    // update user status to verified
-    user.status = UserAccountStatus.VERIFIED;
-    return await this.userRepository.save(user);
+
+    // Update user phone isPhoneNumberConfirmed to true and userStatus to verified
+    const updatedUser = await this.prisma.user.update({
+      where: { email },
+      data: {
+        isPhoneNumberConfirmed: true,
+        status: UserAccountStatus.VERIFIED,
+      },
+    });
+
+    return updatedUser;
   }
 
   /**
@@ -153,12 +192,18 @@ export class UserService {
    * @returns {Promise<any>} - user deleted message
    */
   async remove(email: string): Promise<any> {
-    const deletedUser = await this.userRepository.delete({ email });
-    // User doesn't exist
-    if (!deletedUser.affected) {
-      throw new NotFoundException('User not found');
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new NotFoundException('User does not exist');
     }
-    return { message: 'User deleted' };
+
+    // Delete user
+    await this.prisma.user.delete({ where: { email } });
+
+    return {
+      statusCode: 200,
+      message: 'User deleted',
+    };
   }
   /**
    * Gets all user private files
@@ -166,13 +211,10 @@ export class UserService {
    * @returns {Promise<any>}
    */
   async getAllPrivateFiles(userId: number): Promise<any> {
-    const userWithFiles = await this.userRepository.findOne(
-      { id: userId },
-      { relations: ['files'] },
-    );
-    if (userWithFiles) {
-      return userWithFiles.files;
-    }
-    throw new NotFoundException(`User with id ${userId} not found`);
+    // one user can have multiple files
+    const files = await this.prisma.private_file.findMany({
+      where: { id: userId },
+    });
+    return files;
   }
 }
