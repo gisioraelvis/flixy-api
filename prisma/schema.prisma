@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model genre {
+  id                        Int                         @id(map: "PK_0285d4f1655d080cfcf7d1ab141") @default(autoincrement())
+  createdAt                 DateTime                    @default(now()) @db.Timestamp(6)
+  updatedAt                 DateTime                    @default(now()) @db.Timestamp(6)
+  name                      String                      @db.VarChar
+  single_movie_genres_genre single_movie_genres_genre[]
+}
+
+model language {
+  id                              Int                               @id(map: "PK_cc0a99e710eb3733f6fb42b1d4c") @default(autoincrement())
+  createdAt                       DateTime                          @default(now()) @db.Timestamp(6)
+  updatedAt                       DateTime                          @default(now()) @db.Timestamp(6)
+  name                            String                            @db.VarChar
+  single_movie_languages_language single_movie_languages_language[]
+}
+
+model log {
+  id        Int      @id(map: "PK_350604cbdf991d5930d9e618fbd") @default(autoincrement())
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  context   String   @default("debug") @db.VarChar
+  message   String   @db.VarChar
+  level     String   @db.VarChar
+}
+
+model private_file {
+  id      Int    @id(map: "PK_6ef35c8eae2d9df2959ef4227de") @default(autoincrement())
+  key     String @db.VarChar
+  ownerId Int?
+  user    user?  @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_8be88cd116f2dd3f4fe7e10302c")
+}
+
+model public_file {
+  id  Int    @id(map: "PK_bf2f5ba5aa6e3453b04cb4e4720") @default(autoincrement())
+  url String @db.VarChar
+  key String @db.VarChar
+}
+
+model single_movie {
+  id                              Int                               @id(map: "PK_fda5fa70e002b98a4f6f12f37c0") @default(autoincrement())
+  createdAt                       DateTime                          @default(now()) @db.Timestamp(6)
+  updatedAt                       DateTime                          @default(now()) @db.Timestamp(6)
+  title                           String                            @db.VarChar
+  description                     String                            @db.VarChar
+  duration                        String                            @db.VarChar
+  poster_url                      String                            @db.VarChar
+  trailer_url                     String                            @db.VarChar
+  video_url                       String                            @db.VarChar
+  files_folder                    String                            @db.VarChar
+  is_premiering                   Boolean                           @default(false)
+  price                           String                            @db.VarChar
+  views                           Int                               @default(0)
+  like_dislike_id                 Int                               @default(0)
+  single_movie_genres_genre       single_movie_genres_genre[]
+  single_movie_languages_language single_movie_languages_language[]
+}
+
+model single_movie_genres_genre {
+  singleMovieId Int
+  genreId       Int
+  genre         genre        @relation(fields: [genreId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_97ae92558104bdb34b75c399d45")
+  single_movie  single_movie @relation(fields: [singleMovieId], references: [id], onDelete: Cascade, map: "FK_b9b6d53323f4c3b8cf0d2438e3a")
+
+  @@id([singleMovieId, genreId], map: "PK_212796c042ded71f1843665316f")
+  @@index([genreId], map: "IDX_97ae92558104bdb34b75c399d4")
+  @@index([singleMovieId], map: "IDX_b9b6d53323f4c3b8cf0d2438e3")
+}
+
+model single_movie_languages_language {
+  singleMovieId Int
+  languageId    Int
+  language      language     @relation(fields: [languageId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_29331259e6d340526fc090ecebf")
+  single_movie  single_movie @relation(fields: [singleMovieId], references: [id], onDelete: Cascade, map: "FK_cff71e694193e7a3710c6e155fa")
+
+  @@id([singleMovieId, languageId], map: "PK_da6162452fbcad5a15a8ce06608")
+  @@index([languageId], map: "IDX_29331259e6d340526fc090eceb")
+  @@index([singleMovieId], map: "IDX_cff71e694193e7a3710c6e155f")
+}
+
+model user {
+  id                     Int            @id(map: "PK_cace4a159ff9f2512dd42373760") @default(autoincrement())
+  createdAt              DateTime       @default(now()) @db.Timestamp(6)
+  updatedAt              DateTime       @default(now()) @db.Timestamp(6)
+  email                  String         @unique(map: "UQ_e12875dfb3b1d92d7d7c5377e22") @db.VarChar
+  isEmailConfirmed       Boolean        @default(false)
+  phoneNumber            String         @unique(map: "UQ_f2578043e491921209f5dadd080") @db.VarChar
+  isPhoneNumberConfirmed Boolean        @default(false)
+  password               String         @db.VarChar
+  status                 String         @default("PENDING") @db.VarChar
+  googleId               String?        @db.VarChar
+  facebookId             String?        @db.VarChar
+  verificationToken      String?        @db.VarChar
+  isAdult                Boolean        @default(true)
+  isAdmin                Boolean        @default(false)
+  isContentCreator       Boolean        @default(false)
+  private_file           private_file[]
+}

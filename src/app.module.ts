@@ -15,10 +15,12 @@ import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { FilesModule } from './s3-public-files/files.module';
 import { PrivateFilesModule } from './s3-private-files/private-files.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    PrismaModule,
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -32,6 +34,7 @@ import { PrivateFilesModule } from './s3-private-files/private-files.module';
         POSTGRES_USER: Joi.string().required(),
         POSTGRES_PASSWORD: Joi.string().required(),
         DB_NAME: Joi.string().required(),
+        DATABASE_URL: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_IN: Joi.string().required(),
         JWT_EMAIL_VERIFICATION: Joi.string().required(),

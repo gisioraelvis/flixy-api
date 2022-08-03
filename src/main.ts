@@ -11,6 +11,7 @@ import { config } from 'aws-sdk';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import CustomLogger from './logger/customLogger';
+import { PrismaService } from './prisma/prisma.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -46,6 +47,10 @@ async function bootstrap() {
   const PORT = configService.get('APP_PORT');
   const HOST = configService.get('APP_HOST');
   await app.listen(PORT, HOST);
+
+  // To handle shutdown signal
+  const prismaService = app.get(PrismaService);
+  await prismaService.enableShutdownHooks(app);
 
   Logger.debug(`App running on ${await app.getUrl()}`);
 }
