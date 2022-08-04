@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import Log from './log.entity';
 import CreateLogDto from './dto/createLog.dto';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export default class LogsService {
   constructor(
-    @InjectRepository(Log)
-    private logsRepository: Repository<Log>,
-    private configService: ConfigService,
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -18,16 +15,12 @@ export default class LogsService {
    * @param logDto
    * @returns {Promise<Log>} || {Promise<void>}
    */
-  async saveLog(logDto: CreateLogDto): Promise<void | Log> {
+  async saveLog(logDto: CreateLogDto): Promise<void | any> {
     const isProduction = this.configService.get('NODE_ENV') === 'production';
     if (isProduction) {
-      const newLog = this.logsRepository.create(logDto);
-      await this.logsRepository.save(newLog, {
-        data: {
-          // Ignore logs from this repository
-          isCreatingLogs: true,
-        },
-      });
+      // const newLog = this.logsRepository.create(logDto);
+
+      const newLog = this.prismaService.log.create({ data: logDto });
       return newLog;
     }
   }

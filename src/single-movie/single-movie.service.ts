@@ -3,14 +3,9 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { Repository } from 'typeorm';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
-import { Genre } from './entities/genre.entity';
-import { Language } from './entities/language.entity';
-import { SingleMovie } from './entities/single-movie.entity';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import {
@@ -18,16 +13,12 @@ import {
   stripAndHyphenate,
 } from 'src/utils/utils';
 import { PathLike } from 'fs';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class SingleMoviesService {
   constructor(
-    @InjectRepository(SingleMovie)
-    private readonly singleMovieRepository: Repository<SingleMovie>,
-    @InjectRepository(Genre)
-    private readonly genresRepository: Repository<Genre>,
-    @InjectRepository(Language)
-    private readonly languagesRepository: Repository<Language>,
+    private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -36,36 +27,41 @@ export class SingleMoviesService {
    * @param name - genre name
    * @returns {Promise<Genre>} - Genre
    */
-  private async preloadGenresByName(name: string): Promise<Genre> {
-    const existingGenre = await this.genresRepository.findOne({ name });
+  private async preloadGenresByName(name: string): Promise<any> {
+    const existingGenre = await this.prismaService.genre.findFirst({
+      where: { name },
+    });
     if (existingGenre) {
       return existingGenre;
     }
-    return this.genresRepository.create({ name });
+    return this.prismaService.genre.create({ data: { name } });
   }
 
   /**
    * Save Language if it doesn't already exist
    * @param name - language name
-   * @returns {Promise<Language>} - Language
+   * @returns {Promise<any>} - Language
    */
-  private async preloadLanguagesByName(name: string): Promise<Language> {
-    const existingLanguage = await this.languagesRepository.findOne({ name });
+  private async preloadLanguagesByName(name: string): Promise<any> {
+    const existingLanguage = await this.prismaService.language.findFirst({
+      where: { name },
+    });
     if (existingLanguage) {
       return existingLanguage;
     }
-    return this.languagesRepository.create({ name });
+
+    return this.prismaService.language.create({ data: { name } });
   }
 
   /**
    * Create a new singleMovie
    * @param createSingleMovieDto - new singleMovie
-   * @returns {Promise<SingleMovie>} - created singleMovie
+   * @returns {Promise<any>} - created singleMovie
    */
   async create(
     createSingleMovieDto: CreateSingleMovieDto,
     files: any[],
-  ): Promise<SingleMovie> {
+  ): Promise<any> {
     // check that files array is not empty or undefined
     // files must be provided
     if (!files || files.length === 0) {
@@ -151,40 +147,44 @@ export class SingleMoviesService {
     );
 
     // create and save the new singleMovie
-    const newSingleMovie = this.singleMovieRepository.create({
-      ...createSingleMovieDto,
-      genres: genresArrayObj,
-      languages: languagesArrayObj,
-      poster_url: posterPath,
-      trailer_url: trailerPath,
-      video_url: videoPath,
-      files_folder: newSingleMovieFolder,
+    const newSingleMovie = await this.prismaService.singleMovie.create({
+      data: {
+        ...createSingleMovieDto,
+        genres: { connect: genresArrayObj },
+        languages: { connect: languagesArrayObj },
+        posterUrl: posterPath,
+        trailerUrl: trailerPath,
+        videoUrl: videoPath,
+        filesFolder: newSingleMovieFolder,
+      },
     });
-    await this.singleMovieRepository.save(newSingleMovie);
     return newSingleMovie;
   }
 
   /**
    * Return all SingleMovies or paginated
    * @param paginationQuery - pagination query
-   * @returns {Promise<SingleMovie[]>} - all SingleMovies
+   * @returns {Promise<any[]>} - all SingleMovies
    */
-  async findAll(paginationQuery: PaginationQueryDto): Promise<SingleMovie[]> {
+  async findAll(paginationQuery: PaginationQueryDto): Promise<any[]> {
     const { limit, offset } = paginationQuery;
-    return await this.singleMovieRepository.find({
-      relations: ['genres', 'languages'],
+
+    return await this.prismaService.singleMovie.findMany({
       take: limit,
       skip: offset,
+      include: { genres: true, languages: true },
     });
   }
 
   /**
    * Find a singleMovie by id
    * @param id - singleMovie id
-   * @returns {Promise<SingleMovie>} - SingleMovie
+   * @returns {Promise<any>} - SingleMovie
    */
-  async findOne(id: number): Promise<SingleMovie> {
-    const singleMovie = await this.singleMovieRepository.findOne(id);
+  async findOne(id: number): Promise<any> {
+    const singleMovie = await this.prismaService.singleMovie.findUnique({
+      where: { id },
+    });
     if (!singleMovie) {
       throw new NotFoundException(`SingleMovie with id ${id} not found`);
     }
@@ -194,11 +194,12 @@ export class SingleMoviesService {
   /**
    * Find singleMovie by title
    * @param title - singleMovie title
-   * @returns {Promise<SingleMovie>} - SingleMovie
+   * @returns {Promise<any>} - SingleMovie
    */
-  async findByTitle(title: string): Promise<SingleMovie> {
-    const singleMovie = await this.singleMovieRepository.findOne({
+  async findByTitle(title: string): Promise<any> {
+    const singleMovie = await this.prismaService.singleMovie.findMany({
       where: { title },
+      take: 10,
     });
     if (!singleMovie) {
       throw new NotFoundException(`movie with title ${title} does not exist`);
@@ -210,14 +211,16 @@ export class SingleMoviesService {
    * Update singleMovie details
    * @param id - singleMovie id
    * @param updateSingleMovieDto
-   * @returns {Promise<SingleMovie | any>} - updated singleMovie
+   * @returns {Promise<any>} - updated singleMovie
    */
   async update(
     id: number,
     updateSingleMovieDto: UpdateSingleMovieDto,
     files: any[],
-  ): Promise<SingleMovie> {
-    const singleMovie = await this.singleMovieRepository.findOne(id);
+  ): Promise<any> {
+    const singleMovie = await this.prismaService.singleMovie.findUnique({
+      where: { id },
+    });
     if (!singleMovie) {
       throw new NotFoundException(`SingleMovie with id ${id} does not exist`);
     }
@@ -257,7 +260,7 @@ export class SingleMoviesService {
     // if newposter is provided
     // delete the old poster and save the new one
     if (files.find((file) => file.fieldname === 'poster')) {
-      const oldPoster = singleMovie.poster_url;
+      const oldPoster = singleMovie.posterUrl;
       try {
         await fs.unlink(oldPoster);
       } catch (error) {
@@ -268,7 +271,7 @@ export class SingleMoviesService {
 
       const poster = files.find((file) => file.fieldname === 'poster');
       const posterOriginalname = stripAndHyphenate(poster.originalname);
-      const posterPath = `${singleMovie.files_folder}/${poster.fieldname}-${posterOriginalname}`;
+      const posterPath = `${singleMovie.filesFolder}/${poster.fieldname}-${posterOriginalname}`;
       try {
         await fs.writeFile(posterPath, poster.buffer);
       } catch (error) {
@@ -282,7 +285,7 @@ export class SingleMoviesService {
     // if newtrailer is provided
     // delete the old trailer and save the new one
     if (files.find((file) => file.fieldname === 'trailer')) {
-      const oldTrailer = singleMovie.trailer_url;
+      const oldTrailer = singleMovie.trailerUrl;
       try {
         fs.unlink(oldTrailer);
       } catch (error) {
@@ -292,7 +295,7 @@ export class SingleMoviesService {
       }
       const trailer = files.find((file) => file.fieldname === 'trailer');
       const trailerOriginalname = stripAndHyphenate(trailer.originalname);
-      const trailerPath = `${singleMovie.files_folder}/${trailer.fieldname}-${trailerOriginalname}`;
+      const trailerPath = `${singleMovie.filesFolder}/${trailer.fieldname}-${trailerOriginalname}`;
       try {
         await fs.writeFile(trailerPath, trailer.buffer);
       } catch (error) {
@@ -306,7 +309,7 @@ export class SingleMoviesService {
     // if new video is provided
     // delete the old video and save the new one
     if (files.find((file) => file.fieldname === 'video')) {
-      const oldVideo = singleMovie.video_url;
+      const oldVideo = singleMovie.videoUrl;
       try {
         await fs.unlink(oldVideo);
       } catch (error) {
@@ -316,7 +319,7 @@ export class SingleMoviesService {
       }
       const video = files.find((file) => file.fieldname === 'video');
       const videoOriginalname = stripAndHyphenate(video.originalname);
-      const videoPath = `${singleMovie.files_folder}/${video.fieldname}-${videoOriginalname}`;
+      const videoPath = `${singleMovie.filesFolder}/${video.fieldname}-${videoOriginalname}`;
       try {
         await fs.writeFile(videoPath, video.buffer);
       } catch (error) {
@@ -328,13 +331,16 @@ export class SingleMoviesService {
     }
 
     // TODO: fix duplicates when updating genres and languages
-    // update singleMovie
-    const updatedSingleMovie = await this.singleMovieRepository.preload({
-      id: +id,
-      ...updateSingleMovieDto,
+    const updatedSingleMovie = await this.prismaService.singleMovie.update({
+      where: { id: +id },
+      data: {
+        ...updateSingleMovieDto,
+        genres: { connect: updateSingleMovieDto.genres },
+        languages: { connect: updateSingleMovieDto.languages },
+      },
     });
 
-    return await this.singleMovieRepository.save(updatedSingleMovie);
+    return updatedSingleMovie;
   }
 
   /**
@@ -343,13 +349,14 @@ export class SingleMoviesService {
    * @returns {Promise<any>} - deleted SingleMovie title
    */
   async remove(id: number): Promise<any> {
-    const singleMovie = await this.singleMovieRepository.findOne(id);
-
+    const singleMovie = await this.prismaService.singleMovie.findUnique({
+      where: { id },
+    });
     if (!singleMovie) {
       throw new NotFoundException(`Single Movie with id ${id} does not exist`);
     }
 
-    const singleMoviesFolder = singleMovie.files_folder;
+    const singleMoviesFolder = singleMovie.filesFolder;
 
     // Raise exception if the singleMovie folder doesn't exist
     try {
@@ -361,8 +368,8 @@ export class SingleMoviesService {
     }
 
     // delete singleMovie from the db
-    await this.singleMovieRepository.delete(id);
+    await this.prismaService.singleMovie.delete({ where: { id } });
 
-    return { message: `${singleMovie.title} deleted` };
+    return { statusCode: 200, message: `${singleMovie.title} deleted` };
   }
 }

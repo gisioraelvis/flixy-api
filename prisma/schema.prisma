@@ -32,7 +32,7 @@ enum UserStatus {
 model PrivateFile {
   id        Int      @id @default(autoincrement())
   key       String  @unique()
-  user      User?    @relation(fields: [ownerId], references: [id])
+  owner      User?    @relation(fields: [ownerId], references: [id])
   ownerId   Int
   createdAt DateTime @default(now())
 }

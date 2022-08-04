@@ -1,16 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
-import PublicFile from './entities/publicFile.entity';
 import { v4 as uuid } from 'uuid';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class FilesService {
   constructor(
-    @InjectRepository(PublicFile)
-    private publicFilesRepository: Repository<PublicFile>,
+    private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -25,16 +22,19 @@ export class FilesService {
       })
       .promise();
 
-    const newFile = this.publicFilesRepository.create({
-      key: uploadResult.Key,
-      url: uploadResult.Location,
+    const newFile = await this.prismaService.publicFile.create({
+      data: {
+        key: uploadResult.Key,
+        url: uploadResult.Location,
+        owner: { connect: { id: 1 } },
+      },
     });
-    await this.publicFilesRepository.save(newFile);
+
     return newFile;
   }
 
-  async findAll(): Promise<PublicFile[]> {
-    return this.publicFilesRepository.find();
+  async findAll(): Promise<any[]> {
+    return await this.prismaService.publicFile.findMany();
   }
 
   async addFile(fileBuffer: Buffer, filename: string) {
@@ -42,7 +42,13 @@ export class FilesService {
   }
 
   async deletePublicFile(fileId: number) {
-    const file = await this.publicFilesRepository.findOne({ id: fileId });
+    const file = await this.prismaService.publicFile.findUnique({
+      where: { id: fileId },
+    });
+
+    if (!file) {
+      throw new NotFoundException(`File with id ${fileId} does not exist`);
+    }
     const s3 = new S3();
     await s3
       .deleteObject({
@@ -50,6 +56,7 @@ export class FilesService {
         Key: file.key,
       })
       .promise();
-    await this.publicFilesRepository.delete(fileId);
+    // await this.publicFilesRepository.delete(fileId);
+    await this.prismaService.publicFile.delete({ where: { id: fileId } });
   }
 }

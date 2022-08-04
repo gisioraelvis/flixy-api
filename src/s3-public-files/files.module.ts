@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { FilesController } from './files.controller';
 import { FilesService } from './files.service';
-import { PublicFile } from './entities/publicFile.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PublicFile])],
+  imports: [],
   controllers: [FilesController],
-  providers: [FilesService],
+  providers: [FilesService, PrismaService],
 })
 export class FilesModule {}

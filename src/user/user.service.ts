@@ -209,7 +209,7 @@ export class UserService {
   async getAllPrivateFiles(userId: number): Promise<any> {
     // one user can have multiple files - user - privateFiles is a 1:n relationship
     const files = await this.prisma.privateFile.findMany({
-      where: { user: { id: userId } },
+      where: { owner: { id: userId } },
     });
     return files;
   }

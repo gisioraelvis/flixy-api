@@ -18,10 +18,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "mig:gen": "ts-node ./node_modules/.bin/typeorm migration:generate -d src/migrations",
-    "mig:run": "ts-node ./node_modules/.bin/typeorm migration:run",
-    "mig:rev": "ts-node ./node_modules/.bin/typeorm migration:revert"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@casl/ability": "^5.4.4",
@@ -34,7 +31,6 @@
     "@nestjs/passport": "^8.2.1",
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/serve-static": "^2.2.2",
-    "@nestjs/typeorm": "^8.0.4",
     "@prisma/client": "^4.1.1",
     "@types/aws-sdk": "^2.7.0",
     "@types/nodemailer": "^6.4.4",
@@ -57,7 +53,6 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "twilio": "^3.77.2",
-    "typeorm": "^0.2.45",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

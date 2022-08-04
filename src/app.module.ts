@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './db/db.module';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { UserModule } from './user/user.module';
@@ -19,7 +18,6 @@ import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
-    DatabaseModule,
     PrismaModule,
     ConfigModule.forRoot({
       isGlobal: true,
@@ -30,10 +28,6 @@ import { PrismaModule } from './prisma/prisma.module';
         APP_HOST: Joi.string().default('localhost'),
         APP_PORT: Joi.number().default(5000),
         POSTGRES_HOST: Joi.string().required(),
-        POSTGRES_PORT: Joi.number().required(),
-        POSTGRES_USER: Joi.string().required(),
-        POSTGRES_PASSWORD: Joi.string().required(),
-        DB_NAME: Joi.string().required(),
         DATABASE_URL: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_IN: Joi.string().required(),

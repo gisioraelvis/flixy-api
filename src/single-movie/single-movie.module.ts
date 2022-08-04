@@ -2,17 +2,11 @@ import { Module } from '@nestjs/common';
 import { SingleMoviesService } from './single-movie.service';
 import { SingleMoviesController } from './single-movie.controller';
 import { CommonModule } from 'src/common/common.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Genre } from './entities/genre.entity';
-import { Language } from './entities/language.entity';
-import { SingleMovie } from './entities/single-movie.entity';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
-  imports: [
-    CommonModule,
-    TypeOrmModule.forFeature([SingleMovie, Genre, Language]),
-  ],
+  imports: [CommonModule],
   controllers: [SingleMoviesController],
-  providers: [SingleMoviesService],
+  providers: [SingleMoviesService, PrismaService],
 })
 export class SingleMoviesModule {}

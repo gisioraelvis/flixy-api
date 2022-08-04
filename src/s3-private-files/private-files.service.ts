@@ -3,19 +3,16 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { S3 } from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuid } from 'uuid';
-import PrivateFile from './entities/private-file.entity';
 import { UserService } from 'src/user/user.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class PrivateFilesService {
   constructor(
-    @InjectRepository(PrivateFile)
-    private privateFilesRepository: Repository<PrivateFile>,
+    private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
   ) {}
@@ -34,13 +31,13 @@ export class PrivateFilesService {
       })
       .promise();
 
-    const newFile = this.privateFilesRepository.create({
-      key: uploadResult.Key,
-      owner: {
-        id: ownerId,
+    const newFile = await this.prismaService.privateFile.create({
+      data: {
+        key: uploadResult.Key,
+        owner: { connect: { id: ownerId } },
       },
     });
-    await this.privateFilesRepository.save(newFile);
+
     return newFile;
   }
 
@@ -51,10 +48,9 @@ export class PrivateFilesService {
   public async fetchPrivateFile(fileId: number) {
     const s3 = new S3();
 
-    const fileInfo = await this.privateFilesRepository.findOne(
-      { id: fileId },
-      { relations: ['owner'] },
-    );
+    const fileInfo = await this.prismaService.privateFile.findUnique({
+      where: { id: fileId },
+    });
 
     if (fileInfo) {
       const stream = await s3
@@ -75,7 +71,7 @@ export class PrivateFilesService {
 
   async getPrivateFile(userId: number, fileId: number) {
     const file = await this.fetchPrivateFile(fileId);
-    if (file.info.owner.id === userId) {
+    if (file.info.ownerId === userId) {
       return file;
     }
     throw new UnauthorizedException();
@@ -92,10 +88,10 @@ export class PrivateFilesService {
 
   async getAllPrivateFiles(userId: number) {
     const userFiles = await this.userService.getAllPrivateFiles(userId);
-    console.log(userFiles);
+
     if (userFiles) {
       return Promise.all(
-        userFiles.map(async (file) => {
+        userFiles.map(async (file: { key: string }) => {
           const url = await this.generatePresignedUrl(file.key);
           return {
             ...file,
