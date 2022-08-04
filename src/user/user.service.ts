@@ -3,10 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { PasswordService } from 'src/auth/password.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserAccountStatus } from './entities/user.entity';
@@ -14,8 +12,6 @@ import { User, UserAccountStatus } from './entities/user.entity';
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
     private prisma: PrismaService,
     private passwordService: PasswordService,
   ) {}
@@ -154,10 +150,10 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    // update user email confirmed to true and status to verified
+    // update user email confirmed to true and status to active
     const updatedUser = await this.prisma.user.update({
       where: { email },
-      data: { isEmailConfirmed: true, status: UserAccountStatus.VERIFIED },
+      data: { isEmailConfirmed: true, status: UserAccountStatus.ACTIVE },
     });
 
     return updatedUser;
@@ -174,12 +170,12 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    // Update user phone isPhoneNumberConfirmed to true and userStatus to verified
+    // Update user phone isPhoneNumberConfirmed to true and userStatus to active
     const updatedUser = await this.prisma.user.update({
       where: { email },
       data: {
         isPhoneNumberConfirmed: true,
-        status: UserAccountStatus.VERIFIED,
+        status: UserAccountStatus.ACTIVE,
       },
     });
 
@@ -211,9 +207,9 @@ export class UserService {
    * @returns {Promise<any>}
    */
   async getAllPrivateFiles(userId: number): Promise<any> {
-    // one user can have multiple files
-    const files = await this.prisma.private_file.findMany({
-      where: { id: userId },
+    // one user can have multiple files - user - privateFiles is a 1:n relationship
+    const files = await this.prisma.privateFile.findMany({
+      where: { user: { id: userId } },
     });
     return files;
   }
