@@ -17,8 +17,10 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
+
   // env variables
   const configService = app.get(ConfigService);
+
   app.use(helmet());
   app.enableCors();
   // i.e /api/v1
@@ -42,16 +44,23 @@ async function bootstrap() {
     secretAccessKey: configService.get('AWS_SECRET_ACCESS_KEY'),
     region: configService.get('AWS_REGION'),
   });
-  // Custom logger
-  app.useLogger(app.get(CustomLogger));
+
+  const NODE_ENV = configService.get('NODE_ENV');
+
+  // In production save logs to the db using the custom logger
+  if (NODE_ENV === 'production') {
+    app.useLogger(app.get(CustomLogger));
+  }
+
   const PORT = configService.get('APP_PORT');
   const HOST = configService.get('APP_HOST');
   await app.listen(PORT, HOST);
 
+  // In development console log port and host
+  Logger.debug(`App running in ${NODE_ENV} mode on ${await app.getUrl()}`);
+
   // To handle shutdown signal
   const prismaService = app.get(PrismaService);
   await prismaService.enableShutdownHooks(app);
-
-  Logger.debug(`App running on ${await app.getUrl()}`);
 }
 bootstrap();
