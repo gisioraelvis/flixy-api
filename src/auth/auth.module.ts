@@ -10,7 +10,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailConfirmationService } from './emailConfirmation.service';
 import { EmailPasswordResetService } from './emailPasswordReset.service';
 import PhoneNumberConfirmationService from './phoneNumberConfirmation.service';
-import { PasswordService } from './password.service';
+import { PasswordService } from './passwordHashing.service';
 
 @Module({
   imports: [

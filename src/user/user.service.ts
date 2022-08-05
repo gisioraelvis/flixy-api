@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PasswordService } from 'src/auth/password.service';
+import { PasswordService } from 'src/auth/passwordHashing.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -37,6 +37,12 @@ export class UserService {
     if (userPhoneNumber) {
       throw new ConflictException('Phone Number is already registered');
     }
+
+    // hash the password before
+    const hashedPassword = await this.passwordService.hashPassword(
+      userDto.password,
+    );
+    userDto.password = hashedPassword;
 
     // Create user
     const newUser = await this.prisma.user.create({
