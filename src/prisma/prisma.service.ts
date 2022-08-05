@@ -6,6 +6,27 @@ import { PrismaClient } from '@prisma/client';
  */
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
+  constructor() {
+    super({
+      //Log to stdout/console
+      log: ['query', 'info', 'warn', 'error'],
+
+      // // Emit as events
+      // log: [
+      //   { emit: 'stdout', level: 'query' },
+      //   { emit: 'stdout', level: 'info' },
+      //   { emit: 'stdout', level: 'warn' },
+      //   { emit: 'stdout', level: 'error' },
+      // ],
+    });
+
+    // Event-based logging - Use Logger.log() to save logs to the db
+    // this.$on<any>('query', (event: Prisma.QueryEvent) => {
+    //   Logger.log('Prisma Query: \n' + event.query);
+    //   Logger.log('Prisma Query Duration: ' + event.duration + 'ms');
+    // });
+  }
+
   async onModuleInit() {
     await this.$connect();
   }
