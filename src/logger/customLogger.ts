@@ -14,7 +14,6 @@ class CustomLogger extends ConsoleLogger {
     logsService: LogsService,
   ) {
     const environment = configService.get('NODE_ENV');
-
     super(context, {
       ...options,
       logLevels: getLogLevels(environment === 'production'),
@@ -32,6 +31,7 @@ class CustomLogger extends ConsoleLogger {
       level: 'log',
     });
   }
+
   error(message: string, context?: string, stack?: string) {
     super.error.apply(this, [message, context, stack]);
 
@@ -41,32 +41,23 @@ class CustomLogger extends ConsoleLogger {
       level: 'error',
     });
   }
+
   warn(message: string, context?: string) {
     super.warn.apply(this, [message, context]);
 
     this.logsService.saveLog({
       message,
       context,
-      level: 'error',
+      level: 'warn',
     });
   }
+
   debug(message: string, context?: string) {
     super.debug.apply(this, [message, context]);
-
-    this.logsService.saveLog({
-      message,
-      context,
-      level: 'error',
-    });
   }
+
   verbose(message: string, context?: string) {
     super.debug.apply(this, [message, context]);
-
-    this.logsService.saveLog({
-      message,
-      context,
-      level: 'error',
-    });
   }
 }
 
