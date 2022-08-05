@@ -9,76 +9,70 @@ datasource db {
 
 model User {
   id                     Int           @id @default(autoincrement())
-  email                  String        @unique()
+  email                  String        @unique
   isEmailConfirmed       Boolean       @default(false)
-  phoneNumber            String        @unique()
+  phoneNumber            String        @unique
   isPhoneNumberConfirmed Boolean       @default(false)
   password               String
   status                 UserStatus    @default(PENDING)
   isAdmin                Boolean       @default(false)
   isContentCreator       Boolean       @default(false)
-  privateFiles           PrivateFile[]
-  publicFiles            PublicFile[]
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
-}
-
-enum UserStatus {
-  PENDING
-  ACTIVE
-  INACTIVE
+  privateFiles           PrivateFile[]
+  publicFiles            PublicFile[]
 }
 
 model PrivateFile {
   id        Int      @id @default(autoincrement())
-  key       String  @unique()
-  owner      User?    @relation(fields: [ownerId], references: [id])
+  key       String   @unique
   ownerId   Int
   createdAt DateTime @default(now())
+  owner     User     @relation(fields: [ownerId], references: [id])
 }
 
 model PublicFile {
   id        Int      @id @default(autoincrement())
   url       String   @unique
   key       String   @unique
-  owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   Int
   createdAt DateTime @default(now())
+  owner     User     @relation(fields: [ownerId], references: [id])
 }
 
 model Genre {
   id           Int           @id @default(autoincrement())
   name         String        @unique
-  singleMovies SingleMovie[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  singleMovies SingleMovie[]
 }
 
 model Language {
   id           Int           @id @default(autoincrement())
   name         String        @unique
-  singleMovies SingleMovie[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  singleMovies SingleMovie[]
 }
 
 model SingleMovie {
-  id            Int        @id() @default(autoincrement())
-  title         String     
-  description   String     
-  duration      String     
-  posterUrl     String     
-  trailerUrl    String     
-  videoUrl      String     
-  filesFolder   String     
+  id            Int        @id @default(autoincrement())
+  title         String
+  description   String
+  duration      String
+  posterUrl     String
+  trailerUrl    String
+  videoUrl      String
+  filesFolder   String
   isPremiering  Boolean    @default(false)
-  price         String     
+  price         String
   views         Int        @default(0)
   likeDislikeId Int        @default(0)
-  genres        Genre[]
-  languages     Language[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+  genres        Genre[]
+  languages     Language[]
 }
 
 model Log {
@@ -87,4 +81,10 @@ model Log {
   message   String
   level     String
   createdAt DateTime @default(now())
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
 }
