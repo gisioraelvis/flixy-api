@@ -18,7 +18,7 @@ export default class LogsService {
   async saveLog(logDto: CreateLogDto): Promise<void | any> {
     const isProduction = this.configService.get('NODE_ENV') === 'production';
     if (isProduction) {
-      return this.prismaService.log.create({ data: logDto });
+      return await this.prismaService.log.create({ data: logDto });
     }
   }
 }
