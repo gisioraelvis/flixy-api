@@ -13,7 +13,7 @@ export default class LogsService {
   /**
    * Saves app logs to the database when in production
    * @param logDto
-   * @returns {Promise<Log>} || {Promise<void>}
+   * @returns {Promise<any>} || {Promise<void>}
    */
   async saveLog(logDto: CreateLogDto): Promise<void | any> {
     const isProduction = this.configService.get('NODE_ENV') === 'production';

@@ -9,7 +9,7 @@ import { SmsModule } from './sms/sms.module';
 import { CaslModule } from './casl/casl.module';
 import { SingleMoviesModule } from './single-movie/single-movie.module';
 import * as Joi from 'joi';
-import HttpLogMiddleware from './utils/httpLogMiddleware';
+import HttpLoggerMiddleware from './logger/httpLoggerMiddleware';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { FilesModule } from './s3-public-files/files.module';
@@ -72,6 +72,6 @@ import { PrismaModule } from './prisma/prisma.module';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(HttpLogMiddleware).forRoutes('*');
+    consumer.apply(HttpLoggerMiddleware).forRoutes('*');
   }
 }
