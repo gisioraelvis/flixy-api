@@ -10,6 +10,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     super({
       //Log to stdout/console
       log: ['query', 'info', 'warn', 'error'],
+      errorFormat: 'pretty',
 
       // // Emit as events
       // log: [
