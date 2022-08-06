@@ -1,60 +1,30 @@
 // prisma/seed.ts
-
 import { PrismaClient } from '@prisma/client';
-import { PasswordService } from '../src/auth/passwordHashing.service';
+import {
+  generateAdminUser,
+  generateContentCreators,
+  generateUsers,
+} from './users.seed';
 
 // initialize Prisma Client
 const prisma = new PrismaClient();
 
-const hashPassword = new PasswordService().hashPassword;
-
 async function main() {
-  await prisma.user.deleteMany();
+  // delete all existing tables
+  await prisma.user.deleteMany({});
+  console.log('\n 🌰  Seeding Users...\n');
 
-  console.log('\n 🌰  Seeding...\n');
+  // create admin user
+  const adminUser = await generateAdminUser();
+  await prisma.user.create({ data: adminUser });
 
-  // create users - admin, content creator and user
+  // create content creator users
+  await prisma.user.createMany({ data: generateContentCreators });
 
-  const user1 = await prisma.user.create({
-    data: {
-      email: 'admin@gmail.com',
-      isEmailConfirmed: true,
-      phoneNumber: '+123456789',
-      isPhoneNumberConfirmed: true,
-      password: await hashPassword('admin'),
-      status: 'ACTIVE',
-      isAdmin: true,
-      isContentCreator: true,
-    },
-  });
+  // create users
+  await prisma.user.createMany({ data: generateUsers });
 
-  const user2 = await prisma.user.create({
-    data: {
-      email: 'contentcreator@gmail.com',
-      isEmailConfirmed: true,
-      phoneNumber: '+123845679',
-      isPhoneNumberConfirmed: true,
-      password: await hashPassword('contentcreator'),
-      status: 'ACTIVE',
-      isAdmin: false,
-      isContentCreator: true,
-    },
-  });
-
-  const user3 = await prisma.user.create({
-    data: {
-      email: 'user@gmail.com',
-      isEmailConfirmed: true,
-      phoneNumber: '+123489567',
-      isPhoneNumberConfirmed: true,
-      password: await hashPassword('user'),
-      status: 'ACTIVE',
-      isAdmin: false,
-      isContentCreator: false,
-    },
-  });
-
-  console.log({ user1, user2, user3 });
+  console.log(`Seeded ${await prisma.user.count()} users`);
 }
 
 // execute the main function
