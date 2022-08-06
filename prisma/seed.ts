@@ -1,14 +1,17 @@
 // prisma/seed.ts
 
 import { PrismaClient } from '@prisma/client';
+import { PasswordService } from '../src/auth/passwordHashing.service';
 
 // initialize Prisma Client
 const prisma = new PrismaClient();
 
+const hashPassword = new PasswordService().hashPassword;
+
 async function main() {
   await prisma.user.deleteMany();
 
-  console.log('Seeding...');
+  console.log('\n 🌰  Seeding...\n');
 
   // create users - admin, content creator and user
 
@@ -18,7 +21,7 @@ async function main() {
       isEmailConfirmed: true,
       phoneNumber: '+123456789',
       isPhoneNumberConfirmed: true,
-      password: 'admin',
+      password: await hashPassword('admin'),
       status: 'ACTIVE',
       isAdmin: true,
       isContentCreator: true,
@@ -31,7 +34,7 @@ async function main() {
       isEmailConfirmed: true,
       phoneNumber: '+123845679',
       isPhoneNumberConfirmed: true,
-      password: 'contentcreator',
+      password: await hashPassword('contentcreator'),
       status: 'ACTIVE',
       isAdmin: false,
       isContentCreator: true,
@@ -44,7 +47,7 @@ async function main() {
       isEmailConfirmed: true,
       phoneNumber: '+123489567',
       isPhoneNumberConfirmed: true,
-      password: 'customer',
+      password: await hashPassword('user'),
       status: 'ACTIVE',
       isAdmin: false,
       isContentCreator: false,
