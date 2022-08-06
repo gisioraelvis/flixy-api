@@ -39,6 +39,7 @@ class CustomLogger extends ConsoleLogger {
       message,
       context,
       level: 'error',
+      stack,
     });
   }
 

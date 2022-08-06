@@ -78,8 +78,9 @@ model SingleMovie {
 model Log {
   id        Int      @id @default(autoincrement())
   context   String   @default("debug")
-  message   String
   level     String
+  message   String
+  stack    String?
   createdAt DateTime @default(now())
 }
 
