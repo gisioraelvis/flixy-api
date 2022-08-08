@@ -13,7 +13,7 @@ enum UserStatus {
 export const generateAdminUser = async () => ({
   email: 'admin@gmail.com',
   isEmailConfirmed: true,
-  phoneNumber: '+2543456789',
+  phoneNumber: '+254345678910',
   isPhoneNumberConfirmed: true,
   password: await hashPassword('admin'),
   status: UserStatus.ACTIVE,
@@ -22,7 +22,7 @@ export const generateAdminUser = async () => ({
 });
 
 // generate random content creator users
-export const generateContentCreators = Array.from({ length: 10 }).map(() => ({
+export const generateContentCreators = Array.from({ length: 100 }).map(() => ({
   email: faker.internet.email(),
   isEmailConfirmed: true,
   phoneNumber: faker.phone.number('+254#########'),
@@ -34,7 +34,7 @@ export const generateContentCreators = Array.from({ length: 10 }).map(() => ({
 }));
 
 // generate random users
-export const generateUsers = Array.from({ length: 80 }).map(() => ({
+export const generateUsers = Array.from({ length: 70_000 }).map(() => ({
   email: faker.internet.email(),
   isEmailConfirmed: true,
   phoneNumber: faker.phone.number('+254#########'),

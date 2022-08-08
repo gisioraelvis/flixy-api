@@ -19,10 +19,16 @@ async function main() {
   await prisma.user.create({ data: adminUser });
 
   // create content creator users
-  await prisma.user.createMany({ data: generateContentCreators });
+  await prisma.user.createMany({
+    data: generateContentCreators,
+    skipDuplicates: true,
+  });
 
   // create users
-  await prisma.user.createMany({ data: generateUsers });
+  await prisma.user.createMany({
+    data: generateUsers,
+    skipDuplicates: true,
+  });
 
   console.log(`Seeded ${await prisma.user.count()} users`);
 }
