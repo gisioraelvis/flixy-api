@@ -7,7 +7,7 @@ import { PasswordService } from 'src/auth/passwordHashing.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User, UserAccountStatus } from './entities/user.entity';
+import { User, UserStatus } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -21,7 +21,7 @@ export class UserService {
    * @params userDto - email, phoneNumber, password
    * @returns {Promise<User>} - created user
    */
-  async create(userDto: CreateUserDto): Promise<User | any> {
+  async create(userDto: CreateUserDto): Promise<User> {
     const { email, phoneNumber } = userDto;
 
     const userEmail = await this.prisma.user.findUnique({ where: { email } });
@@ -58,7 +58,7 @@ export class UserService {
    * Return all Users
    * @returns {Promise<User[]>}
    */
-  async findAll(): Promise<User[] | any> {
+  async findAll(): Promise<User[]> {
     return await this.prisma.user.findMany();
   }
 
@@ -67,10 +67,10 @@ export class UserService {
    * @param email
    * @returns {Promise<User>} - User
    */
-  async findOne(email: string): Promise<User | any> {
+  async findOne(email: string): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('User does not exist');
     }
     return user;
   }
@@ -80,10 +80,10 @@ export class UserService {
    * @params email and UpdateUserDto
    * @returns {Promise<User>} - updated user
    */
-  async update(email: string, userDto: UpdateUserDto): Promise<User | any> {
+  async update(email: string, userDto: UpdateUserDto): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('User does not exist');
     }
 
     const userEmail = await this.prisma.user.findUnique({
@@ -120,12 +120,9 @@ export class UserService {
    * Update user password
    * @param email
    * @param newPassword
-   * @returns {Promise<User | any>} - Updated user
+   * @returns {Promise<User>} - Updated user
    */
-  async updatePassword(
-    email: string,
-    newPassword: string,
-  ): Promise<User | any> {
+  async updatePassword(email: string, newPassword: string): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new NotFoundException('User does not exist');
@@ -150,16 +147,16 @@ export class UserService {
    * @param email
    * @returns {Promise<User>} - Updated user
    */
-  async markEmailAsConfirmed(email: string): Promise<any> {
+  async markEmailAsConfirmed(email: string): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('User does not exist');
     }
 
     // update user email confirmed to true and status to active
     const updatedUser = await this.prisma.user.update({
       where: { email },
-      data: { isEmailConfirmed: true, status: UserAccountStatus.ACTIVE },
+      data: { isEmailConfirmed: true, status: UserStatus.ACTIVE },
     });
 
     return updatedUser;
@@ -170,10 +167,10 @@ export class UserService {
    * @param email
    * @returns {Promise<User>} - Updated user
    */
-  async markPhoneNumberConfirmed(email: string): Promise<any> {
+  async markPhoneNumberConfirmed(email: string): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('User does not exist');
     }
 
     // Update user phone isPhoneNumberConfirmed to true and userStatus to active
@@ -181,7 +178,7 @@ export class UserService {
       where: { email },
       data: {
         isPhoneNumberConfirmed: true,
-        status: UserAccountStatus.ACTIVE,
+        status: UserStatus.ACTIVE,
       },
     });
 
@@ -207,6 +204,7 @@ export class UserService {
       message: 'User deleted',
     };
   }
+
   /**
    * Gets all user private files
    * @param userId

@@ -27,6 +27,7 @@ export default class PhoneNumberConfirmationService {
       'TWILIO_VERIFICATION_SERVICE_SID',
     );
 
+    console.log(`-----------${phoneNumber}---------------`);
     return this.twilioClient.verify
       .services(serviceSid)
       .verifications.create({ to: phoneNumber, channel: 'sms' });

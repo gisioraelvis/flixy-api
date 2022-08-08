@@ -3,7 +3,7 @@ import { UserService } from 'src/user/user.service';
 import { SignUpDto } from './dto/create-auth.dto';
 import { EmailConfirmationService } from './emailConfirmation.service';
 import { EmailPasswordResetService } from './emailPasswordReset.service';
-import { User } from 'src/user/entities/user.entity';
+import { User } from '@prisma/client';
 import { PasswordService } from './passwordHashing.service';
 import { JwtService } from '@nestjs/jwt';
 
