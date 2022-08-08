@@ -7,10 +7,12 @@ import {
   Param,
   Delete,
   HttpCode,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @Controller('users')
 export class UsersController {
@@ -18,8 +20,10 @@ export class UsersController {
 
   // Return all users
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Query() paginationQuery: PaginationQueryDto) {
+    console.log('-----------------------------------------------------');
+    console.log(JSON.stringify(paginationQuery));
+    return this.userService.findAll(paginationQuery);
   }
 
   // Find a user by email

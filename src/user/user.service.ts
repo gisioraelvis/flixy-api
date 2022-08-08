@@ -7,7 +7,7 @@ import { PasswordService } from 'src/auth/passwordHashing.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User, UserStatus } from '@prisma/client';
+import { Prisma, User, UserStatus } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -58,8 +58,21 @@ export class UserService {
    * Return all Users
    * @returns {Promise<User[]>}
    */
-  async findAll(): Promise<User[]> {
-    return await this.prisma.user.findMany();
+  async findAll(paginationQuery: {
+    offset?: number;
+    limit?: number;
+    cursor?: Prisma.UserWhereUniqueInput;
+    where?: Prisma.UserWhereInput;
+    orderBy?: Prisma.UserOrderByWithRelationInput;
+  }): Promise<User[]> {
+    const { offset, limit, cursor, where, orderBy } = paginationQuery;
+    return this.prisma.user.findMany({
+      skip: offset,
+      take: limit,
+      cursor,
+      where,
+      orderBy,
+    });
   }
 
   /**
