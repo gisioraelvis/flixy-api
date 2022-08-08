@@ -15,6 +15,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { FilesModule } from './s3-public-files/files.module';
 import { PrivateFilesModule } from './s3-private-files/private-files.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -68,7 +69,7 @@ import { PrismaModule } from './prisma/prisma.module';
     FilesModule,
     PrivateFilesModule,
   ],
-  controllers: [],
+  controllers: [AppController],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
