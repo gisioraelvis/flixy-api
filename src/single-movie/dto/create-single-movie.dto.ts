@@ -20,13 +20,13 @@ export class CreateSingleMovieDto {
   languages: any;
 
   @IsNotEmpty()
-  is_premiering: boolean;
+  isPremiering: boolean;
 
   @IsNotEmpty()
   price: string;
 
-  poster_url: string;
-  trailer_url: string;
-  video_url: string;
-  files_folder: string;
+  posterUrl: string;
+  trailerUrl: string;
+  videoUrl: string;
+  filesFolder: string;
 }
