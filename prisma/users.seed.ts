@@ -22,7 +22,7 @@ export const generateAdminUser = async () => ({
 });
 
 // generate random content creator users
-export const generateContentCreators = Array.from({ length: 100 }).map(() => ({
+export const generateContentCreators = Array.from({ length: 3 }).map(() => ({
   email: faker.internet.email(),
   isEmailConfirmed: true,
   phoneNumber: faker.phone.number('+254#########'),
@@ -34,7 +34,7 @@ export const generateContentCreators = Array.from({ length: 100 }).map(() => ({
 }));
 
 // generate random users
-export const generateUsers = Array.from({ length: 70_000 }).map(() => ({
+export const generateUsers = Array.from({ length: 12 }).map(() => ({
   email: faker.internet.email(),
   isEmailConfirmed: true,
   phoneNumber: faker.phone.number('+254#########'),
