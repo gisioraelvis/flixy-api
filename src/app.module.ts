@@ -39,6 +39,8 @@ import { AppController } from './app.controller';
         SMTP_API_KEY: Joi.string().required(),
         SMTP_USERNAME: Joi.string().required(),
         SMTP_PASSWORD: Joi.string().required(),
+        EMAIL_CONFIRMATION_URL: Joi.string().required(),
+        EMAIL_PASSWORD_RESET_URL: Joi.string().required(),
         TWILIO_ACCOUNT_SID: Joi.string().required(),
         TWILIO_AUTH_TOKEN: Joi.string().required(),
         TWILIO_VERIFICATION_SERVICE_SID: Joi.string().required(),

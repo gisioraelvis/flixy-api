@@ -7,7 +7,9 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserService } from '../user/user.service';
-import { EMAIL_CONFIRMATION_URL } from 'src/common/constants';
+//import { EMAIL_CONFIRMATION_URL } from 'src/common/constants';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Injectable()
 export class EmailConfirmationService {
@@ -33,6 +35,9 @@ export class EmailConfirmationService {
     });
 
     // Email confirmation link endpoint with jwt token as query param
+    const EMAIL_CONFIRMATION_URL = this.configService.get(
+      'EMAIL_CONFIRMATION_URL',
+    );
     const url = `${EMAIL_CONFIRMATION_URL}?token=${token}`;
 
     // Send email

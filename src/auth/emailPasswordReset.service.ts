@@ -3,7 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserService } from '../user/user.service';
-import { EMAIL_PASSWORD_RESET_URL } from 'src/common/constants';
+//import { EMAIL_PASSWORD_RESET_URL } from 'src/common/constants';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Injectable()
 export class EmailPasswordResetService {
@@ -29,6 +31,9 @@ export class EmailPasswordResetService {
     });
 
     // Password reset link endpoint with jwt token as query param
+    const EMAIL_PASSWORD_RESET_URL = this.configService.get(
+      'EMAIL_PASSWORD_RESET_URL',
+    );
     const url = `${EMAIL_PASSWORD_RESET_URL}?token=${token}`;
 
     // Send email
