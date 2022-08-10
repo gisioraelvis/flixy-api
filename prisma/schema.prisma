@@ -7,20 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
 model User {
-  id                     Int           @id @default(autoincrement())
-  email                  String        @unique
-  isEmailConfirmed       Boolean       @default(false)
-  phoneNumber            String        @unique
-  isPhoneNumberConfirmed Boolean       @default(false)
-  password               String
-  status                 UserStatus    @default(PENDING)
-  isAdmin                Boolean       @default(false)
-  isContentCreator       Boolean       @default(false)
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
-  privateFiles           PrivateFile[]
-  publicFiles            PublicFile[]
+  id                        Int                           @id @default(autoincrement())
+  email                     String                        @unique
+  isEmailConfirmed          Boolean                       @default(false)
+  phoneNumber               String                        @unique
+  isPhoneNumberConfirmed    Boolean                       @default(false)
+  password                  String
+  status                    UserStatus                    @default(PENDING)
+  isAdmin                   Boolean                       @default(false)
+  isContentCreator          Boolean                       @default(false)
+  createdAt                 DateTime                      @default(now())
+  updatedAt                 DateTime                      @updatedAt
+  contentCreator            ContentCreator?               @relation(fields: [contentCreatorId], references: [id])
+  contentCreatorId          Int?                          @unique
+  watchLaters               UserMovieWatchLater[]
+  premieringMoviesPurchases UserPremieringMoviePurchase[]
+  subscriptionPackage       SubscriptionPackage?          @relation(fields: [subscriptionPackageId], references: [id])
+  subscriptionPackageId     Int?                          @unique
+  privateFiles              PrivateFile[]
+  publicFiles               PublicFile[]
+}
+
+model ContentCreator {
+  id           Int           @id @default(autoincrement())
+  user         User?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  SingleMovies SingleMovie[]
+  seriesMovies SeriesMovie[]
 }
 
 model PrivateFile {
@@ -46,6 +67,7 @@ model Genre {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   singleMovies SingleMovie[]
+  seriesMovies SeriesMovie[]
 }
 
 model Language {
@@ -54,25 +76,116 @@ model Language {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   singleMovies SingleMovie[]
+  seriesMovies SeriesMovie[]
 }
 
 model SingleMovie {
-  id            Int        @id @default(autoincrement())
-  title         String
-  description   String
-  duration      String
-  posterUrl     String
-  trailerUrl    String
-  videoUrl      String
-  filesFolder   String
-  isPremiering  Boolean    @default(false)
-  price         String
-  views         Int        @default(0)
-  likeDislikeId Int        @default(0)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  genres        Genre[]
-  languages     Language[]
+  id                      Int                           @id @default(autoincrement())
+  title                   String
+  description             String
+  duration                String
+  posterUrl               String
+  trailerUrl              String
+  videoUrl                String
+  filesFolder             String?
+  isPremiering            Boolean                       @default(false)
+  price                   String
+  views                   Int                           @default(0)
+  genres                  Genre[]
+  languages               Language[]
+  contentCreator          ContentCreator                @relation(fields: [contentCreatorId], references: [id])
+  contentCreatorId        Int
+  createdAt               DateTime                      @default(now())
+  updatedAt               DateTime                      @updatedAt
+  userWatchLaters         UserMovieWatchLater[]
+  userPremieringPurchases UserPremieringMoviePurchase[]
+}
+
+model SeriesMovie {
+  id               Int                   @id @default(autoincrement())
+  title            String
+  description      String
+  posterUrl        String
+  trailerUrl       String
+  isPremiering     Boolean               @default(false)
+  views            Int                   @default(0)
+  seasons          Season[]
+  genres           Genre[]
+  languages        Language[]
+  contentCreator   ContentCreator        @relation(fields: [contentCreatorId], references: [id])
+  contentCreatorId Int
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  userWatchLater   UserMovieWatchLater[]
+}
+
+model Season {
+  id                      Int                           @id @default(autoincrement())
+  seriesMovie             SeriesMovie                   @relation(fields: [seriesMovieId], references: [id])
+  seriesMovieId           Int                           @unique
+  title                   String
+  description             String
+  posterUrl               String
+  trailerUrl              String
+  isPremiering            Boolean                       @default(false)
+  price                   String
+  views                   Int                           @default(0)
+  episodes                Episode[]
+  createdAt               DateTime                      @default(now())
+  updatedAt               DateTime                      @updatedAt
+  userPremieringPurchases UserPremieringMoviePurchase[]
+}
+
+model Episode {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  duration    String
+  posterUrl   String
+  trailerUrl  String
+  videoUrl    String
+  views       Int      @default(0)
+  season      Season   @relation(fields: [seasonId], references: [id])
+  seasonId    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserMovieWatchLater {
+  id           Int           @id @default(autoincrement())
+  user         User          @relation(fields: [userId], references: [id])
+  userId       Int
+  singleMovies SingleMovie[]
+  seriesMovies SeriesMovie[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model UserPremieringMoviePurchase {
+  id                 Int           @id @default(autoincrement())
+  user               User          @relation(fields: [userId], references: [id])
+  userId             Int
+  singleMovies       SingleMovie[]
+  seriesMovieSeasons Season[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+enum Package {
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+model SubscriptionPackage {
+  id                        Int      @id @default(autoincrement())
+  name                      Package
+  price                     String
+  description               String
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  userSubscriptionPackage   User?
+  userSubscriptionPackageId Int      @unique
 }
 
 model Log {
@@ -80,12 +193,6 @@ model Log {
   context   String   @default("debug")
   level     String
   message   String
-  stack    String?
+  stack     String?
   createdAt DateTime @default(now())
-}
-
-enum UserStatus {
-  PENDING
-  ACTIVE
-  INACTIVE
 }
