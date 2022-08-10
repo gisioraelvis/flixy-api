@@ -186,13 +186,14 @@ model SubscriptionPackage {
   price             String
   createdAt         DateTime                  @default(now())
   updatedAt         DateTime                  @updatedAt
-  userSubscriptions UserSubscriptionPackage[]
+  userSubscriptions UserSubscriptionPackage? @relation(fields: [userSubscriptionPackageId], references: [id])
+  userSubscriptionPackageId Int? @unique
 }
 
 model UserSubscriptionPackage {
   id                   Int                   @id @default(autoincrement())
-  subscriptionPackages SubscriptionPackage[]
-  user                 User?
+  subscriptionPackages SubscriptionPackage[] 
+  users                 User[]
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 }
