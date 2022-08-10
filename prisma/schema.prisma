@@ -29,7 +29,7 @@ model User {
   contentCreatorId          Int?                          @unique
   watchLaters               UserMovieWatchLater[]
   premieringMoviesPurchases UserPremieringMoviePurchase[]
-  subscriptionPackage       SubscriptionPackage?          @relation(fields: [subscriptionPackageId], references: [id])
+  subscriptionPackage       UserSubscriptionPackage?      @relation(fields: [subscriptionPackageId], references: [id])
   subscriptionPackageId     Int?                          @unique
   privateFiles              PrivateFile[]
   publicFiles               PublicFile[]
@@ -171,21 +171,30 @@ model UserPremieringMoviePurchase {
   updatedAt          DateTime      @updatedAt
 }
 
-enum Package {
+enum PackageName {
   BASIC
   STANDARD
   PREMIUM
+  PLATINUM
 }
 
 model SubscriptionPackage {
-  id                        Int      @id @default(autoincrement())
-  name                      Package
-  price                     String
-  description               String
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-  userSubscriptionPackage   User?
-  userSubscriptionPackageId Int      @unique
+  id                Int                       @id @default(autoincrement())
+  name              PackageName
+  description       String
+  duration          Int
+  price             String
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  userSubscriptions UserSubscriptionPackage[]
+}
+
+model UserSubscriptionPackage {
+  id                   Int                   @id @default(autoincrement())
+  subscriptionPackages SubscriptionPackage[]
+  user                 User?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 }
 
 model Log {
