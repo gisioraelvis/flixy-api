@@ -223,10 +223,23 @@ export class UserService {
    * @param userId
    * @returns {Promise<any>}
    */
-  async getAllPrivateFiles(userId: number): Promise<any> {
+  async getAllPrivateFiles(
+    userId: number,
+    paginationQuery: {
+      offset?: number;
+      limit?: number;
+      cursor?: Prisma.SingleMovieWhereUniqueInput;
+      orderBy?: Prisma.SingleMovieOrderByWithRelationInput;
+    },
+  ): Promise<any> {
+    const { offset, limit, cursor, orderBy } = paginationQuery;
     // one user can have multiple files - user - privateFiles is a 1:n relationship
     const files = await this.prisma.privateFile.findMany({
       where: { owner: { id: userId } },
+      skip: offset,
+      take: limit,
+      cursor,
+      orderBy,
     });
     return files;
   }
