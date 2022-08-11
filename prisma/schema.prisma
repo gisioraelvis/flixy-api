@@ -197,10 +197,12 @@ model SubscriptionPackage {
 
 model UserSubscriptionPackage {
   id                    Int                 @id @default(autoincrement())
-  subscriptionPackage   SubscriptionPackage @relation(fields: [subscriptionPackageId], references: [id])
-  subscriptionPackageId Int
   user                  User                @relation(fields: [userId], references: [id])
   userId                Int                 @unique
+  subscriptionPackage   SubscriptionPackage @relation(fields: [subscriptionPackageId], references: [id])
+  subscriptionPackageId Int
+  startDate             DateTime            @default(now())
+  endDate               DateTime            
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
 }
