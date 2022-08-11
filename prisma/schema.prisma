@@ -46,36 +46,38 @@ model ContentCreator {
 model PrivateFile {
   id        Int      @id @default(autoincrement())
   key       String   @unique
+  owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   Int
   createdAt DateTime @default(now())
-  owner     User     @relation(fields: [ownerId], references: [id])
+  updatedAt DateTime @updatedAt
 }
 
 model PublicFile {
   id        Int      @id @default(autoincrement())
   url       String   @unique
   key       String   @unique
+  owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   Int
   createdAt DateTime @default(now())
-  owner     User     @relation(fields: [ownerId], references: [id])
+  updatedAt DateTime @updatedAt
 }
 
 model Genre {
   id           Int           @id @default(autoincrement())
   name         String        @unique
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
   singleMovies SingleMovie[]
   seriesMovies SeriesMovie[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Language {
   id           Int           @id @default(autoincrement())
   name         String        @unique
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
   singleMovies SingleMovie[]
   seriesMovies SeriesMovie[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model SingleMovie {
@@ -89,15 +91,15 @@ model SingleMovie {
   filesFolder             String?
   isPremiering            Boolean                       @default(false)
   price                   String
+  userPremieringPurchases UserPremieringMoviePurchase[]
   views                   Int                           @default(0)
   genres                  Genre[]
   languages               Language[]
   contentCreator          ContentCreator                @relation(fields: [contentCreatorId], references: [id])
   contentCreatorId        Int
+  userWatchLaters         UserMovieWatchLater[]
   createdAt               DateTime                      @default(now())
   updatedAt               DateTime                      @updatedAt
-  userWatchLaters         UserMovieWatchLater[]
-  userPremieringPurchases UserPremieringMoviePurchase[]
 }
 
 model SeriesMovie {
@@ -113,15 +115,13 @@ model SeriesMovie {
   languages        Language[]
   contentCreator   ContentCreator        @relation(fields: [contentCreatorId], references: [id])
   contentCreatorId Int
+  userWatchLater   UserMovieWatchLater[]
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
-  userWatchLater   UserMovieWatchLater[]
 }
 
 model Season {
   id                      Int                           @id @default(autoincrement())
-  seriesMovie             SeriesMovie                   @relation(fields: [seriesMovieId], references: [id])
-  seriesMovieId           Int                           @unique
   title                   String
   description             String
   posterUrl               String
@@ -129,14 +129,17 @@ model Season {
   isPremiering            Boolean                       @default(false)
   price                   String
   views                   Int                           @default(0)
+  userPremieringPurchases UserPremieringMoviePurchase[]
   episodes                Episode[]
+  seriesMovie             SeriesMovie                   @relation(fields: [seriesMovieId], references: [id])
+  seriesMovieId           Int                   
   createdAt               DateTime                      @default(now())
   updatedAt               DateTime                      @updatedAt
-  userPremieringPurchases UserPremieringMoviePurchase[]
 }
 
 model Episode {
   id          Int      @id @default(autoincrement())
+  number      Int
   title       String
   description String
   duration    String
