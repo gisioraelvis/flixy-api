@@ -1,6 +1,6 @@
 // prisma/seed.ts
 import { PrismaClient } from '@prisma/client';
-import { subscriptionPackages } from './subscriptinpackages.seed';
+import { subscriptionPackages } from './subscriptionpackages.seed';
 import {
   generateAdminUser,
   generateContentCreators,
