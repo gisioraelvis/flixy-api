@@ -29,8 +29,7 @@ model User {
   contentCreatorId          Int?                          @unique
   watchLaters               UserMovieWatchLater[]
   premieringMoviesPurchases UserPremieringMoviePurchase[]
-  subscriptionPackage       UserSubscriptionPackage?      @relation(fields: [subscriptionPackageId], references: [id])
-  subscriptionPackageId     Int?                          @unique
+  subscriptionPackage       UserSubscriptionPackage?
   privateFiles              PrivateFile[]
   publicFiles               PublicFile[]
 }
@@ -186,16 +185,17 @@ model SubscriptionPackage {
   price             String
   createdAt         DateTime                  @default(now())
   updatedAt         DateTime                  @updatedAt
-  userSubscriptions UserSubscriptionPackage? @relation(fields: [userSubscriptionPackageId], references: [id])
-  userSubscriptionPackageId Int? @unique
+  userSubscriptions UserSubscriptionPackage[]
 }
 
 model UserSubscriptionPackage {
-  id                   Int                   @id @default(autoincrement())
-  subscriptionPackages SubscriptionPackage[] 
-  users                 User[]
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  id                    Int                 @id @default(autoincrement())
+  subscriptionPackage   SubscriptionPackage @relation(fields: [subscriptionPackageId], references: [id])
+  subscriptionPackageId Int
+  user                  User                @relation(fields: [userId], references: [id])
+  userId                Int                 @unique
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
 }
 
 model Log {
