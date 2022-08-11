@@ -157,8 +157,10 @@ model UserMovieWatchLater {
   id           Int           @id @default(autoincrement())
   user         User          @relation(fields: [userId], references: [id])
   userId       Int
-  singleMovies SingleMovie[]
-  seriesMovies SeriesMovie[]
+  singleMovie SingleMovie  @relation(fields: [singleMovieId], references: [id])
+  singleMovieId Int
+  seriesMovie SeriesMovie @relation(fields: [seriesMovieId], references: [id])
+  seriesMovieId Int
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
