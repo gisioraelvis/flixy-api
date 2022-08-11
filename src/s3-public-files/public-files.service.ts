@@ -3,7 +3,7 @@ import { S3 } from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, PublicFile } from '@prisma/client';
 
 @Injectable()
 export class PublicFilesService {
@@ -12,13 +12,19 @@ export class PublicFilesService {
     private readonly configService: ConfigService,
   ) {}
 
-  async uploadPublicFile(
+  /**
+   * Uploads a file to S3 and saves the file metadata to the db
+   * i.e file key, url to access the file, and the owner id
+   * @param filename
+   * @param dataBuffer
+   * @returns {Promise<PublicFile>} - the file metadata
+   */
+  async uploadFile(
     ownerId: number,
     filename: string,
     dataBuffer: Buffer,
-  ) {
+  ): Promise<PublicFile> {
     const s3 = new S3();
-
     const uploadResult = await s3
       .upload({
         Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
@@ -38,13 +44,18 @@ export class PublicFilesService {
     return newFile;
   }
 
+  /**
+   * Fetch all files owned by a user
+   * @param paginationQuery
+   * @returns {Promise<PublicFile[]>} - the files
+   */
   async findAll(paginationQuery: {
     offset?: number;
     limit?: number;
     cursor?: Prisma.SingleMovieWhereUniqueInput;
     where?: Prisma.SingleMovieScalarWhereInput;
     orderBy?: Prisma.SingleMovieOrderByWithRelationInput;
-  }): Promise<any[]> {
+  }): Promise<PublicFile[]> {
     const { offset, limit, cursor, where, orderBy } = paginationQuery;
     return await this.prismaService.publicFile.findMany({
       skip: offset,
@@ -55,12 +66,33 @@ export class PublicFilesService {
     });
   }
 
-  async addFile(ownerId: number, filename: string, fileBuffer: Buffer) {
-    return await this.uploadPublicFile(ownerId, filename, fileBuffer);
+  /**
+   * Find a file by id
+   * @param id - the id of the file to find
+   * @returns {Promise<PublicFile>} - the file
+   */
+  async findOne(id: number): Promise<PublicFile> {
+    const file = await this.prismaService.publicFile.findUnique({
+      where: { id },
+    });
+
+    if (!file) {
+      throw new NotFoundException(`File with id ${id} does not exist`);
+    }
+
+    return file;
   }
 
-  async deletePublicFile(ownerId: number, fileId: number) {
-    // find file by fileId owned by ownerId
+  /**
+   * Delete a file by id
+   * @param ownerId
+   * @param fileId
+   * @returns {Promise<any>}
+   */
+  async deleteFile(ownerId: number, fileId: number): Promise<any> {
+    //TODO: Admin can delete any file (not just their own)
+
+    // users should only delete their own files
     const file = await this.prismaService.publicFile.findFirst({
       where: {
         AND: [{ id: fileId }, { ownerId }],
@@ -79,7 +111,14 @@ export class PublicFilesService {
         Key: file.key,
       })
       .promise();
-    // await this.publicFilesRepository.delete(fileId);
-    await this.prismaService.publicFile.delete({ where: { id: fileId } });
+
+    await this.prismaService.publicFile.delete({
+      where: { id: fileId },
+    });
+
+    return {
+      statusCode: 200,
+      message: `File with id ${fileId} deleted successfully`,
+    };
   }
 }
