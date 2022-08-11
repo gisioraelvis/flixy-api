@@ -21,8 +21,6 @@ export class UsersController {
   // Return all users
   @Get()
   findAll(@Query() paginationQuery: PaginationQueryDto) {
-    console.log('-----------------------------------------------------');
-    console.log(JSON.stringify(paginationQuery));
     return this.userService.findAll(paginationQuery);
   }
 
