@@ -169,8 +169,10 @@ model UserPremieringMoviePurchase {
   id                 Int           @id @default(autoincrement())
   user               User          @relation(fields: [userId], references: [id])
   userId             Int
-  singleMovies       SingleMovie[]
-  seriesMovieSeasons Season[]
+  singleMovie       SingleMovie  @relation(fields: [singleMovieId], references: [id])
+  singleMovieId     Int
+  seriesMovieSeason Season        @relation(fields: [seriesMovieSeasonId], references: [id])
+  seriesMovieSeasonId Int
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 }
