@@ -188,7 +188,7 @@ model SubscriptionPackage {
   id                Int                       @id @default(autoincrement())
   name              PackageName
   description       String
-  duration          Int
+  duration          Int                       @default(1) // in months
   price             String
   createdAt         DateTime                  @default(now())
   updatedAt         DateTime                  @updatedAt

@@ -1,5 +1,6 @@
 // prisma/seed.ts
 import { PrismaClient } from '@prisma/client';
+import { subscriptionPackages } from './subscriptinpackages.seed';
 import {
   generateAdminUser,
   generateContentCreators,
@@ -12,7 +13,7 @@ const prisma = new PrismaClient();
 async function main() {
   // delete all existing tables
   await prisma.user.deleteMany({});
-  console.log('\n 🌰  Seeding Users...\n');
+  console.log('\n 🌰  Seeding Users...');
 
   // create admin user
   const adminUser = await generateAdminUser();
@@ -31,6 +32,17 @@ async function main() {
   });
 
   console.log(`Seeded ${await prisma.user.count()} users`);
+
+  await prisma.subscriptionPackage.deleteMany({});
+  console.log('\n 🌰  Seeding Subscription Packages...');
+  // create subscription packages
+  await prisma.subscriptionPackage.createMany({
+    data: subscriptionPackages,
+  });
+
+  console.log(
+    `Seeded ${await prisma.subscriptionPackage.count()} subscription packages`,
+  );
 }
 
 // execute the main function
