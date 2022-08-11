@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { v4 as uuid } from 'uuid';
 import { UserService } from 'src/user/user.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 
 @Injectable()
 export class PrivateFilesService {
@@ -18,9 +19,9 @@ export class PrivateFilesService {
   ) {}
 
   async uploadPrivateFile(
-    dataBuffer: Buffer,
     ownerId: number,
     filename: string,
+    dataBuffer: Buffer,
   ) {
     const s3 = new S3();
     const uploadResult = await s3
@@ -41,8 +42,8 @@ export class PrivateFilesService {
     return newFile;
   }
 
-  async addPrivateFile(fileBuffer: Buffer, userId: number, filename: string) {
-    return this.uploadPrivateFile(fileBuffer, userId, filename);
+  async addPrivateFile(userId: number, filename: string, fileBuffer: Buffer) {
+    return this.uploadPrivateFile(userId, filename, fileBuffer);
   }
 
   public async fetchPrivateFile(fileId: number) {
@@ -86,8 +87,14 @@ export class PrivateFilesService {
     });
   }
 
-  async getAllPrivateFiles(userId: number) {
-    const userFiles = await this.userService.getAllPrivateFiles(userId);
+  async getAllPrivateFiles(
+    userId: number,
+    paginationQuery: PaginationQueryDto,
+  ) {
+    const userFiles = await this.userService.getAllPrivateFiles(
+      userId,
+      paginationQuery,
+    );
 
     if (userFiles) {
       return Promise.all(

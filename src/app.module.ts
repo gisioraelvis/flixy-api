@@ -12,7 +12,7 @@ import * as Joi from 'joi';
 import HttpLoggerMiddleware from './logger/httpLoggerMiddleware';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { FilesModule } from './s3-public-files/files.module';
+import { PublicFilesModule } from './s3-public-files/public-files.module';
 import { PrivateFilesModule } from './s3-private-files/private-files.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AppController } from './app.controller';
@@ -68,7 +68,7 @@ import { AppController } from './app.controller';
     SmsModule,
     CaslModule,
     SingleMoviesModule,
-    FilesModule,
+    PublicFilesModule,
     PrivateFilesModule,
   ],
   controllers: [AppController],

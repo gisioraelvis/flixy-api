@@ -5,6 +5,7 @@ import {
   Post,
   Req,
   Res,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -13,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Express, Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import RequestWithUser from 'src/auth/requestWithUser.interface';
+import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PrivateFilesService } from './private-files.service';
 
 @Controller('private-files')
@@ -26,9 +28,9 @@ export class PrivateFilesController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.privateFilesService.addPrivateFile(
-      file.buffer,
       req.user.id,
       file.originalname,
+      file.buffer,
     );
   }
 
@@ -36,19 +38,25 @@ export class PrivateFilesController {
   @UseGuards(JwtAuthGuard)
   async getPrivateFile(
     @Req() req: RequestWithUser,
-    @Param() fileId,
+    @Param('id') fileId: string,
     @Res() res: Response,
   ) {
     const file = await this.privateFilesService.getPrivateFile(
       req.user.id,
-      fileId.id,
+      +fileId,
     );
     file.stream.pipe(res);
   }
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getAllPrivateFiles(@Req() request: RequestWithUser) {
-    return this.privateFilesService.getAllPrivateFiles(request.user.id);
+  async getAllPrivateFiles(
+    @Req() request: RequestWithUser,
+    @Query() paginationQuery: PaginationQueryDto,
+  ) {
+    return this.privateFilesService.getAllPrivateFiles(
+      request.user.id,
+      paginationQuery,
+    );
   }
 }

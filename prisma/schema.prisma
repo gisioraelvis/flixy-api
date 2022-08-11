@@ -54,7 +54,7 @@ model PrivateFile {
 
 model PublicFile {
   id        Int      @id @default(autoincrement())
-  url       String   @unique
+  url       String   @unique // Public file url
   key       String   @unique
   owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   Int
