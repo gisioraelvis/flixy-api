@@ -65,9 +65,19 @@ export class SingleMoviesService {
    * @returns {Promise<any>} - created singleMovie
    */
   async create(
+    userId: number,
     createSingleMovieDto: CreateSingleMovieDto,
     files: any[],
   ): Promise<any> {
+    // check if user is content creator - i.e allowed to upload movies
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user.isContentCreator) {
+      throw new InternalServerErrorException(
+        `User with id ${userId} is not a content creator hence cannot upload movies`,
+      );
+    }
     // check that files array is not empty or undefined
     // files must be provided
     if (!files || files.length === 0) {
@@ -165,6 +175,7 @@ export class SingleMoviesService {
         trailerUrl: trailerPath,
         videoUrl: videoPath,
         filesFolder: newSingleMovieFolder,
+        contentCreator: { connect: { id: userId } },
       },
       include: { genres: true, languages: true },
     });

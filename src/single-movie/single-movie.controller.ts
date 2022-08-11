@@ -1,4 +1,5 @@
 import {
+  Req,
   Controller,
   Get,
   Post,
@@ -9,12 +10,15 @@ import {
   Query,
   UploadedFiles,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { SingleMoviesService } from './single-movie.service';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import RequestWithUser from 'src/auth/requestWithUser.interface';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('single-movies')
 export class SingleMoviesController {
@@ -22,13 +26,19 @@ export class SingleMoviesController {
 
   // create a new singleMovie
   @Post('/create')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(AnyFilesInterceptor())
   create(
+    @Req() req: RequestWithUser,
     @Body() createSingleMovieDto: CreateSingleMovieDto,
     @UploadedFiles()
     files: Array<Express.Multer.File>,
   ) {
-    return this.singleMoviesService.create(createSingleMovieDto, files);
+    return this.singleMoviesService.create(
+      req.user.id,
+      createSingleMovieDto,
+      files,
+    );
   }
 
   // find all singleMovies
