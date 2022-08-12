@@ -3,24 +3,27 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
-import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs/promises';
 import {
   commaSeparatedStringToArray,
   stripAndHyphenate,
 } from 'src/utils/utils';
-import { PathLike } from 'fs';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma, SingleMovie } from '@prisma/client';
+import { MovieFileType, Prisma, SingleMovie } from '@prisma/client';
+import { PrivateFileService } from 'src/s3-private-files/private-files.service';
+import { PublicFilesService } from 'src/s3-public-files/public-files.service';
+import { S3 } from 'aws-sdk';
 
 @Injectable()
-export class SingleMoviesOnDiskService {
+export class SingleMovieService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly configService: ConfigService,
+    private readonly privateFileService: PrivateFileService,
+    private readonly publicFileService: PublicFilesService,
   ) {}
 
   /**
@@ -76,7 +79,7 @@ export class SingleMoviesOnDiskService {
       select: { id: true },
     });
 
-    // check if user is a content creator - i.e allowed to upload movies
+    // check if user is an admin or a content creator - i.e allowed to upload movies
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -89,32 +92,8 @@ export class SingleMoviesOnDiskService {
     // check that files array is not empty or undefined
     // files must be provided
     if (!files || files.length === 0) {
-      throw new NotFoundException(
+      throw new BadRequestException(
         'Poster, Trailer and Video files are required',
-      );
-    }
-
-    // Get the single movies directory path from env
-    const singleMoviesFolder = this.configService.get('SINGLE_MOVIES_FOLDER');
-    try {
-      // create folder
-      await fs.mkdir(singleMoviesFolder, { recursive: true });
-    } catch (error) {
-      throw new InternalServerErrorException(
-        `Error creating single movies folder`,
-      );
-    }
-
-    // create new folder in SINGLE_MOVIES_FOLDER with current date-time and movie title
-    const currentDateTime = new Date().toISOString();
-    const title = stripAndHyphenate(createSingleMovieDto.title);
-    const folderName = `${currentDateTime}-${title}`;
-    const newSingleMovieFolder = `${singleMoviesFolder}/${folderName}`;
-    try {
-      await fs.mkdir(newSingleMovieFolder);
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Error creating new single movies folder',
       );
     }
 
@@ -132,22 +111,25 @@ export class SingleMoviesOnDiskService {
       throw new NotFoundException('Video not found');
     }
 
-    // save files in the newSingleMovieFolder using their fieldname and originalname as filename
-    let posterPath: PathLike | fs.FileHandle;
-    let trailerPath: PathLike | fs.FileHandle;
-    let videoPath: PathLike | fs.FileHandle;
+    // movie files urls
+    let posterUploadResult: S3.ManagedUpload.SendData,
+      trailerUploadResult: S3.ManagedUpload.SendData,
+      videoUploadResult: S3.ManagedUpload.SendData;
     try {
-      const posterOriginalname = stripAndHyphenate(poster.originalname);
-      posterPath = `${newSingleMovieFolder}/${poster.fieldname}-${posterOriginalname}`;
-      await fs.writeFile(posterPath, poster.buffer);
+      posterUploadResult = await this.publicFileService.uploadMovieFile(
+        poster.fieldname,
+        poster.buffer,
+      );
 
-      const trailerOriginalname = stripAndHyphenate(trailer.originalname);
-      trailerPath = `${newSingleMovieFolder}/${trailer.fieldname}-${trailerOriginalname}`;
-      await fs.writeFile(trailerPath, trailer.buffer);
+      trailerUploadResult = await this.publicFileService.uploadMovieFile(
+        trailer.fieldname,
+        trailer.buffer,
+      );
 
-      const videoOriginalname = stripAndHyphenate(video.originalname);
-      videoPath = `${newSingleMovieFolder}/${video.fieldname}-${videoOriginalname}`;
-      await fs.writeFile(videoPath, video.buffer);
+      videoUploadResult = await this.privateFileService.uploadMovieFile(
+        video.fieldname,
+        video.buffer,
+      );
     } catch (error) {
       throw new InternalServerErrorException('Error saving single movie files');
     }
@@ -179,14 +161,35 @@ export class SingleMoviesOnDiskService {
         languages: {
           connect: languagesArrayObj.map((lang) => ({ id: lang.id })),
         },
-        posterUrl: posterPath,
-        trailerUrl: trailerPath,
-        videoUrl: videoPath,
-        filesFolder: newSingleMovieFolder,
+        posterUrl: posterUploadResult.Location,
+        trailerUrl: trailerUploadResult.Location,
+        videoKey: videoUploadResult.Key,
         contentCreator: { connect: { id: contentCreator.id } },
       },
       include: { genres: true, languages: true },
     });
+
+    // save the movie files keys
+    await this.prisma.singleMovieFiles.createMany({
+      data: [
+        {
+          singleMovieId: newSingleMovie.id,
+          fileKey: posterUploadResult.Key,
+          fileType: MovieFileType.POSTER,
+        },
+        {
+          singleMovieId: newSingleMovie.id,
+          fileKey: trailerUploadResult.Key,
+          fileType: MovieFileType.TRAILER,
+        },
+        {
+          singleMovieId: newSingleMovie.id,
+          fileKey: videoUploadResult.Key,
+          fileType: MovieFileType.VIDEO,
+        },
+      ],
+    });
+
     return newSingleMovie;
   }
 
@@ -259,14 +262,11 @@ export class SingleMoviesOnDiskService {
   ): Promise<SingleMovie> {
     const singleMovie = await this.prisma.singleMovie.findUnique({
       where: { id },
-      include: { genres: true, languages: true },
+      include: { genres: true, languages: true, singleMovieFiles: true },
     });
     if (!singleMovie) {
       throw new NotFoundException(`SingleMovie with id ${id} does not exist`);
     }
-
-    // Even if the movie title is changed, retain the old folder name
-    // to avoid having to update the files_folder, poster_url, trailer_url and video_url
 
     const { genres, languages } = updateSingleMovieDto;
 
@@ -297,74 +297,91 @@ export class SingleMoviesOnDiskService {
     // if newposter is provided
     // delete the old poster and save the new one
     if (files.find((file) => file.fieldname === 'poster')) {
-      const oldPoster = singleMovie.posterUrl;
+      // find the current poster key
+      const currentPosterKey = singleMovie.singleMovieFiles.find(
+        (file) => file.fileType === MovieFileType.POSTER,
+      ).fileKey;
       try {
-        await fs.unlink(oldPoster);
+        // delete current poster from s3
+        await this.publicFileService.deleteMovieFile(currentPosterKey);
       } catch (error) {
         throw new InternalServerErrorException(
-          'Error deleting old poster from disk',
+          'Error deleting current poster from s3',
         );
       }
 
-      const poster = files.find((file) => file.fieldname === 'poster');
-      const posterOriginalname = stripAndHyphenate(poster.originalname);
-      const posterPath = `${singleMovie.filesFolder}/${poster.fieldname}-${posterOriginalname}`;
+      const newPoster = files.find((file) => file.fieldname === 'poster');
+      const newPosterOriginalname = stripAndHyphenate(newPoster.originalname);
+      let newPosterUploadResult: S3.ManagedUpload.SendData;
       try {
-        await fs.writeFile(posterPath, poster.buffer);
+        //await fs.writeFile(posterPath, poster.buffer);
+        newPosterUploadResult = await this.publicFileService.uploadMovieFile(
+          newPosterOriginalname,
+          newPoster.buffer,
+        );
       } catch (error) {
         throw new InternalServerErrorException(
-          'Error saving new poster to disk',
+          'Error uploading new poster to s3',
         );
       }
-      updateSingleMovieDto.posterUrl = posterPath;
+      updateSingleMovieDto.posterUrl = newPosterUploadResult.Location;
     }
 
     // if newtrailer is provided
     // delete the old trailer and save the new one
     if (files.find((file) => file.fieldname === 'trailer')) {
-      const oldTrailer = singleMovie.trailerUrl;
+      const currentTrailerKey = singleMovie.singleMovieFiles.find(
+        (file) => file.fileType === MovieFileType.TRAILER,
+      ).fileKey;
       try {
-        fs.unlink(oldTrailer);
+        await this.publicFileService.deleteMovieFile(currentTrailerKey);
       } catch (error) {
         throw new InternalServerErrorException(
-          'Error deleting old trailer from disk',
+          'Error deleting current trailer from s3',
         );
       }
-      const trailer = files.find((file) => file.fieldname === 'trailer');
-      const trailerOriginalname = stripAndHyphenate(trailer.originalname);
-      const trailerPath = `${singleMovie.filesFolder}/${trailer.fieldname}-${trailerOriginalname}`;
+      const newTrailer = files.find((file) => file.fieldname === 'trailer');
+      const newTrailerOriginalname = stripAndHyphenate(newTrailer.originalname);
+      let newTrailerUploadResult: S3.ManagedUpload.SendData;
       try {
-        await fs.writeFile(trailerPath, trailer.buffer);
+        newTrailerUploadResult = await this.publicFileService.uploadMovieFile(
+          newTrailerOriginalname,
+          newTrailer.buffer,
+        );
       } catch (error) {
         throw new InternalServerErrorException(
           'Error saving new trailer to disk',
         );
       }
-      updateSingleMovieDto.trailerUrl = trailerPath;
+      updateSingleMovieDto.trailerUrl = newTrailerUploadResult.Location;
     }
 
     // if new video is provided
     // delete the old video and save the new one
     if (files.find((file) => file.fieldname === 'video')) {
-      const oldVideo = singleMovie.videoUrl;
+      const curentVideoKey = singleMovie.videoKey;
       try {
-        await fs.unlink(oldVideo);
+        await this.privateFileService.deleteMovieFile(curentVideoKey);
       } catch (error) {
         throw new InternalServerErrorException(
-          'Error deleting old video from disk',
+          'Error deleting current video from s3',
         );
       }
-      const video = files.find((file) => file.fieldname === 'video');
-      const videoOriginalname = stripAndHyphenate(video.originalname);
-      const videoPath = `${singleMovie.filesFolder}/${video.fieldname}-${videoOriginalname}`;
+
+      const newVideo = files.find((file) => file.fieldname === 'video');
+      const newVideoOriginalname = stripAndHyphenate(newVideo.originalname);
+      let newVideoUploadResult: S3.ManagedUpload.SendData;
       try {
-        await fs.writeFile(videoPath, video.buffer);
+        newVideoUploadResult = await this.privateFileService.uploadMovieFile(
+          newVideoOriginalname,
+          newVideo.buffer,
+        );
       } catch (error) {
         throw new InternalServerErrorException(
           'Error saving new video to disk',
         );
       }
-      updateSingleMovieDto.videoUrl = videoPath;
+      updateSingleMovieDto.videoUrl = newVideoUploadResult.Key;
     }
 
     // get the current movie genres
@@ -438,26 +455,41 @@ export class SingleMoviesOnDiskService {
    * @returns {Promise<any>} - deleted SingleMovie title
    */
   async remove(id: number): Promise<any> {
+    // TODO: Only admin and movie owner(content creator) should be allowed to delete a movie
     const singleMovie = await this.prisma.singleMovie.findUnique({
       where: { id },
+      include: { singleMovieFiles: true },
     });
     if (!singleMovie) {
       throw new NotFoundException(`Single Movie with id ${id} does not exist`);
     }
 
-    const singleMoviesFolder = singleMovie.filesFolder;
+    // get the public movie files i.e poster and trailer
+    // Exclude video, because it is not public
+    const publicMovieFiles = singleMovie.singleMovieFiles.filter(
+      (file) => file.fileType !== MovieFileType.VIDEO,
+    );
 
-    // Raise exception if the singleMovie folder doesn't exist
     try {
-      await fs.rm(singleMoviesFolder, { recursive: true });
+      // delete all the single movies files from s3
+      await Promise.all(
+        publicMovieFiles.map((file) =>
+          this.publicFileService.deleteMovieFile(file.fileKey),
+        ),
+      );
+
+      // delete the video file, a private file
+      await this.privateFileService.deleteMovieFile(singleMovie.videoKey);
     } catch (error) {
       throw new InternalServerErrorException(
-        `Error deleting single movie folder from disk`,
+        `Error deleting single movie files from s3`,
       );
     }
 
-    // delete singleMovie from the db
-    await this.prisma.singleMovie.delete({ where: { id } });
+    // delete singleMovie and all its associations from db
+    await this.prisma.singleMovie.delete({
+      where: { id },
+    });
 
     return { statusCode: 200, message: `${singleMovie.title} deleted` };
   }

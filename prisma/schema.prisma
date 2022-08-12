@@ -87,8 +87,9 @@ model SingleMovie {
   duration                String
   posterUrl               String
   trailerUrl              String
-  videoUrl                String
+  videoKey                String
   filesFolder             String?
+  singleMovieFiles       SingleMovieFiles[]
   isPremiering            Boolean                       @default(false)
   price                   String
   userPremieringPurchases UserPremieringMoviePurchase[]
@@ -100,6 +101,22 @@ model SingleMovie {
   userWatchLaters         UserMovieWatchLater[]
   createdAt               DateTime                      @default(now())
   updatedAt               DateTime                      @updatedAt
+}
+
+enum MovieFileType {
+  POSTER
+  TRAILER
+  VIDEO
+}
+
+model SingleMovieFiles {
+  id        Int      @id @default(autoincrement())
+  singleMovie SingleMovie @relation(fields: [singleMovieId], references: [id])
+  singleMovieId Int
+  fileKey       String   @unique
+  fileType      MovieFileType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SeriesMovie {

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { S3 } from 'aws-sdk';
+import { AWSError, S3 } from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -11,6 +11,29 @@ export class PublicFilesService {
     private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
   ) {}
+
+  /**
+   * Uploads a file to S3 and saves the file metadata to the db
+   * i.e file key, url to access the file, and the owner id
+   * @param filename
+   * @param dataBuffer
+   * @returns {Promise<PublicFile>} - the file metadata
+   */
+  async uploadMovieFile(
+    filename: string,
+    dataBuffer: Buffer,
+  ): Promise<S3.ManagedUpload.SendData> {
+    const s3 = new S3();
+    const uploadResult = await s3
+      .upload({
+        Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
+        Body: dataBuffer,
+        Key: `${uuid()}-${filename}`,
+      })
+      .promise();
+
+    return uploadResult;
+  }
 
   /**
    * Uploads a file to S3 and saves the file metadata to the db
@@ -81,6 +104,24 @@ export class PublicFilesService {
     }
 
     return file;
+  }
+
+  /**
+   * Delete a file by id from s3
+   * @param fileId
+   * @returns {Promise<any>}
+   */
+  async deleteMovieFile(
+    fileId: string,
+  ): Promise<S3.DeleteObjectOutput | AWSError> {
+    const s3 = new S3();
+    await s3
+      .deleteObject({
+        Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
+        Key: fileId,
+      })
+      .promise();
+    return;
   }
 
   /**

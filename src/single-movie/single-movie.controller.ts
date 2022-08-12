@@ -12,7 +12,7 @@ import {
   UseInterceptors,
   UseGuards,
 } from '@nestjs/common';
-import { SingleMoviesOnDiskService } from './single-movie.service';
+import { SingleMovieService } from './single-movie.service';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
@@ -21,10 +21,8 @@ import RequestWithUser from 'src/auth/requestWithUser.interface';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('single-movies')
-export class SingleMoviesOnDiskController {
-  constructor(
-    private readonly singleMoviesOnDiskService: SingleMoviesOnDiskService,
-  ) {}
+export class SingleMovieController {
+  constructor(private readonly singleMovieService: SingleMovieService) {}
 
   // create a new singleMovie
   @Post('/create')
@@ -36,7 +34,7 @@ export class SingleMoviesOnDiskController {
     @UploadedFiles()
     files: Array<Express.Multer.File>,
   ) {
-    return this.singleMoviesOnDiskService.create(
+    return this.singleMovieService.create(
       req.user.id,
       createSingleMovieDto,
       files,
@@ -46,19 +44,19 @@ export class SingleMoviesOnDiskController {
   // find all singleMovies
   @Get()
   findAll(@Query() paginationQuery: PaginationQueryDto) {
-    return this.singleMoviesOnDiskService.findAll(paginationQuery);
+    return this.singleMovieService.findAll(paginationQuery);
   }
 
   // find a singleMovie by title
   @Get('/search')
   findByTitle(@Query('title') title: string) {
-    return this.singleMoviesOnDiskService.findByTitle(title);
+    return this.singleMovieService.findByTitle(title);
   }
 
   // find a singleMovie by id
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.singleMoviesOnDiskService.findOne(+id);
+    return this.singleMovieService.findOne(+id);
   }
 
   // update a singleMovie given its id
@@ -69,16 +67,12 @@ export class SingleMoviesOnDiskController {
     @Body() updateSingleMovieDto: UpdateSingleMovieDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return this.singleMoviesOnDiskService.update(
-      +id,
-      updateSingleMovieDto,
-      files,
-    );
+    return this.singleMovieService.update(+id, updateSingleMovieDto, files);
   }
 
   // delete a singleMovie given its id
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.singleMoviesOnDiskService.remove(+id);
+    return this.singleMovieService.remove(+id);
   }
 }
