@@ -8,4 +8,4 @@ import { PublicFilesService } from './public-files.service';
   controllers: [PublicFilesController],
   providers: [PublicFilesService, PrismaService],
 })
-export class PublicFilesModule {}
+export class PublicFileModule {}

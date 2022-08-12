@@ -10,7 +10,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, PrivateFile } from '@prisma/client';
 
 @Injectable()
-export class PrivateFilesService {
+export class PrivateFileService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,

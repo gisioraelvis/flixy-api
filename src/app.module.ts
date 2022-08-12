@@ -6,15 +6,16 @@ import { UserModule } from './user/user.module';
 import { LoggerModule } from './logger/logger.module';
 import { AppMailerModule } from './mailer/mailer.module';
 import { SmsModule } from './sms/sms.module';
-import { SingleMoviesOnDiskModule } from './single-movie-on-disk-storage/single-movie.module';
+import { SingleMoviesOnDiskModule } from './single-movie-on-disk-storage/single-movie-on-disk.module';
 import * as Joi from 'joi';
 import HttpLoggerMiddleware from './logger/httpLoggerMiddleware';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { PublicFilesModule } from './s3-public-files/public-files.module';
-import { PrivateFilesModule } from './s3-private-files/private-files.module';
+import { PublicFileModule } from './s3-public-files/public-files.module';
+import { PrivateFileModule } from './s3-private-files/private-files.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AppController } from './app.controller';
+import { SingleMovieModule } from './single-movie/single-movie.module';
 
 @Module({
   imports: [
@@ -66,8 +67,9 @@ import { AppController } from './app.controller';
     AppMailerModule,
     SmsModule,
     SingleMoviesOnDiskModule,
-    PublicFilesModule,
-    PrivateFilesModule,
+    PublicFileModule,
+    PrivateFileModule,
+    SingleMovieModule,
   ],
   controllers: [AppController],
 })
