@@ -17,7 +17,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, SingleMovie } from '@prisma/client';
 
 @Injectable()
-export class SingleMoviesService {
+export class SingleMoviesOnDiskService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,

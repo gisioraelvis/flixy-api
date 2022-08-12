@@ -6,8 +6,7 @@ import { UserModule } from './user/user.module';
 import { LoggerModule } from './logger/logger.module';
 import { AppMailerModule } from './mailer/mailer.module';
 import { SmsModule } from './sms/sms.module';
-import { CaslModule } from './casl/casl.module';
-import { SingleMoviesModule } from './single-movie/single-movie.module';
+import { SingleMoviesOnDiskModule } from './single-movie-on-disk-storage/single-movie.module';
 import * as Joi from 'joi';
 import HttpLoggerMiddleware from './logger/httpLoggerMiddleware';
 import { join } from 'path';
@@ -66,8 +65,7 @@ import { AppController } from './app.controller';
     LoggerModule,
     AppMailerModule,
     SmsModule,
-    CaslModule,
-    SingleMoviesModule,
+    SingleMoviesOnDiskModule,
     PublicFilesModule,
     PrivateFilesModule,
   ],
