@@ -27,6 +27,6 @@ export class CreateSingleMovieDto {
 
   posterUrl: string;
   trailerUrl: string;
-  videoUrl: string;
+  videoKey: string;
   filesFolder: string;
 }

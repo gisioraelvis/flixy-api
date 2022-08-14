@@ -16,6 +16,9 @@ export class SignUpDto {
   @IsNotEmpty()
   @IsString()
   password: string;
+
+  // added to make signupDto compatible with createUserDto and hence updateUserDto
+  isContentCreator: boolean;
 }
 
 export class SignInDto {
