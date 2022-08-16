@@ -1,20 +1,40 @@
-import { Req, Res, Controller, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Req,
+  Res,
+  Controller,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { StreamingService } from './streaming.service';
 import { Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import RequestWithUser from 'src/auth/requestWithUser.interface';
+import { CreateOnDiskStreamDto } from './dto/create-streaming.dto';
 
 @Controller('video-stream')
 export class StreamingController {
   constructor(private readonly streamingService: StreamingService) {}
 
-  @Get(':videoKey')
+  @Get('s3/:videoKey')
   @UseGuards(JwtAuthGuard)
-  async getPrivateMovieFile(
+  async streamS3PrivateFile(
     @Req() req: RequestWithUser,
     @Param('videoKey') videoKey: string,
     @Res() res: Response,
   ) {
-    return this.streamingService.fileStream(videoKey, req, res);
+    return this.streamingService.s3FileStream(videoKey, req, res);
+  }
+
+  @Get('on-disk')
+  @UseGuards(JwtAuthGuard)
+  async streamOnDiskFile(
+    @Req() req: RequestWithUser,
+    @Query() createOnDiskStreamDto: CreateOnDiskStreamDto,
+    @Res() res: Response,
+  ) {
+    const { filePath } = createOnDiskStreamDto;
+    return this.streamingService.onDiskFileStream(filePath, req, res);
   }
 }
