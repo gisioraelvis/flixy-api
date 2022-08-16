@@ -3,6 +3,8 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   NotFoundException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
@@ -571,15 +573,21 @@ export class SingleMovieService {
     );
 
     try {
+      // It's possible that the movie has no public files yet, hence need to check
       // delete all the single movies files from s3
-      await Promise.all(
-        publicMovieFiles.map((file) =>
-          this.publicFileService.deleteMovieFile(file.fileKey),
-        ),
-      );
+      if (publicMovieFiles.length > 0) {
+        await Promise.all(
+          publicMovieFiles.map((file) =>
+            this.publicFileService.deleteMovieFile(file.fileKey),
+          ),
+        );
+      }
 
-      // delete the video file, a private file
-      await this.privateFileService.deleteMovieFile(singleMovie.videoKey);
+      // It's possible that the movie has no video file yet, hence need to check
+      // delete the video file, a private file from s3
+      if (singleMovie.videoKey) {
+        await this.privateFileService.deleteMovieFile(singleMovie.videoKey);
+      }
     } catch (error) {
       throw new InternalServerErrorException(
         `Error deleting single movie files from s3`,

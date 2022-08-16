@@ -16,6 +16,7 @@ import { PrivateFileModule } from './s3-private-files/private-files.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AppController } from './app.controller';
 import { SingleMovieModule } from './single-movie/single-movie.module';
+import { StreamingModule } from './streaming/streaming.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { SingleMovieModule } from './single-movie/single-movie.module';
     PublicFileModule,
     PrivateFileModule,
     SingleMovieModule,
+    StreamingModule,
   ],
   controllers: [AppController],
 })

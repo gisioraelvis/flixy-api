@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { S3 } from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
@@ -66,6 +67,28 @@ export class PrivateFileService {
     });
 
     return newFile;
+  }
+
+  /**
+   * Fetches a movie file from s3,
+   * @param fileKey
+   * @returns {Promise<any>} - the file stream
+   */
+  async getMovieFile(fileKey: string): Promise<any> {
+    const s3 = new S3();
+    try {
+      const fileStream = s3
+        .getObject({
+          Bucket: this.configService.get('AWS_PRIVATE_BUCKET_NAME'),
+          Key: fileKey,
+        })
+        .createReadStream();
+      return fileStream;
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Error fetching file from s3: ${e.message}`,
+      );
+    }
   }
 
   /**
