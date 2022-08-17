@@ -29,6 +29,9 @@ export class CreateSeriesSeasonDto {
   title: string;
 
   @IsNotEmpty()
+  number: number;
+
+  @IsNotEmpty()
   @IsString()
   description: string;
 
@@ -38,7 +41,6 @@ export class CreateSeriesSeasonDto {
   price: string;
   posterUrl: string;
   trailerUrl: string;
-  videoKey: string;
   filesFolder: string;
 }
 

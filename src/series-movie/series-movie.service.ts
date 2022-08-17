@@ -19,7 +19,6 @@ import { S3 } from 'aws-sdk';
 export class SeriesMovieService {
   constructor(
     private readonly prisma: PrismaService,
-
     private readonly publicFileService: PublicFilesService,
   ) {}
 
@@ -365,7 +364,7 @@ export class SeriesMovieService {
         );
       } catch (error) {
         throw new InternalServerErrorException(
-          'Error saving new trailer to disk',
+          'Error uploading new trailer to s3',
         );
       }
       updateSeriesMovieDto.trailerUrl = newTrailerUploadResult.Location;

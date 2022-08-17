@@ -155,6 +155,7 @@ model SeriesMovieFiles {
 
 model SeriesSeason {
   id                      Int                           @id @default(autoincrement())
+  number                  Int
   title                   String
   description             String
   posterUrl               String?

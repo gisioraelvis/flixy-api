@@ -7,15 +7,17 @@ import { PublicFileModule } from 'src/s3-public-files/public-files.module';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrivateFileService } from 'src/s3-private-files/private-files.service';
 import { PublicFilesService } from 'src/s3-public-files/public-files.service';
+import { SeriesSeasonService } from './series-season.service';
 
 @Module({
   imports: [CommonModule, PublicFileModule, PrivateFileModule],
   controllers: [SeriesMovieController],
   providers: [
-    SeriesMovieService,
     PrismaService,
     PrivateFileService,
     PublicFilesService,
+    SeriesMovieService,
+    SeriesSeasonService,
   ],
 })
 export class SeriesMovieModule {}

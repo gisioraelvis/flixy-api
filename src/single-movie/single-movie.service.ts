@@ -388,7 +388,7 @@ export class SingleMovieService {
         );
       } catch (error) {
         throw new InternalServerErrorException(
-          'Error saving new trailer to disk',
+          'Error uploading new trailer to s3',
         );
       }
       updateSingleMovieDto.trailerUrl = newTrailerUploadResult.Location;
