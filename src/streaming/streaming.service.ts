@@ -1,11 +1,6 @@
-import {
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Response } from 'express';
 import { statSync, createReadStream } from 'fs';
-import mime from 'mime';
 import { join } from 'path';
 import RequestWithUser from 'src/auth/requestWithUser.interface';
 import { PrivateFileService } from 'src/s3-private-files/private-files.service';
@@ -31,6 +26,14 @@ export class StreamingService {
     }
   }
 
+  /**
+   * Streams a file stored on the local disk.
+   * @param filePath - The path of the file to stream
+   * @param req
+   * @param res
+   *
+   * @see https://www.smashingmagazine.com/2021/04/building-video-streaming-app-nuxtjs-node-express/
+   */
   async onDiskFileStream(
     filePath: string,
     req: RequestWithUser,
@@ -41,7 +44,7 @@ export class StreamingService {
       const fileSize = statSync(file).size;
 
       // TODO: Dynamically set the content-type
-      // const mimeType = mime.getType(file);
+      // const contentType = mime.getType(file);
 
       const range = req.headers.range;
 
