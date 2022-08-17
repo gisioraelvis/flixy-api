@@ -3,8 +3,6 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   NotFoundException,
-  HttpException,
-  HttpStatus,
 } from '@nestjs/common';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
@@ -270,9 +268,21 @@ export class SingleMovieService {
    * @param title - singleMovie title
    * @returns {Promise<any>} - SingleMovie
    */
-  async findByTitle(title: string): Promise<SingleMovie[]> {
+  async findByTitle(
+    title: string,
+    paginationQuery: {
+      offset?: number;
+      limit?: number;
+      cursor?: Prisma.SeriesMovieWhereUniqueInput;
+      orderBy?: Prisma.SeriesMovieOrderByWithRelationInput;
+    },
+  ): Promise<SingleMovie[]> {
+    const { offset, limit, cursor, orderBy } = paginationQuery;
     const singleMovie = await this.prisma.singleMovie.findMany({
-      take: 10,
+      skip: offset,
+      take: limit,
+      cursor,
+      orderBy,
       where: { title: { contains: title } },
     });
     if (!singleMovie) {
