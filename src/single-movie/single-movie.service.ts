@@ -87,27 +87,10 @@ export class SingleMovieService {
       );
     }
 
-    // // check that files array is not empty or undefined
-    // // files must be provided
-    // if (!files || files.length === 0) {
-    //   throw new BadRequestException(
-    //     'Poster, Trailer and Video files are required',
-    //   );
-    // }
-
-    // check for movie files
+    // get for movie files
     const poster = files.find((file) => file.fieldname === 'poster');
-    // if (!poster) {
-    //   throw new NotFoundException('Poster not found');
-    // }
     const trailer = files.find((file) => file.fieldname === 'trailer');
-    // if (!trailer) {
-    //   throw new NotFoundException('Trailer not found');
-    // }
     const video = files.find((file) => file.fieldname === 'video');
-    // if (!video) {
-    //   throw new NotFoundException('Video not found');
-    // }
 
     // movie files urls
     let posterUploadResult: S3.ManagedUpload.SendData,
