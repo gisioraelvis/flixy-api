@@ -17,6 +17,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AppController } from './app.controller';
 import { SingleMovieModule } from './single-movie/single-movie.module';
 import { StreamingModule } from './streaming/streaming.module';
+import { SeriesMovieModule } from './series-movie/series-movie.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { StreamingModule } from './streaming/streaming.module';
     PrivateFileModule,
     SingleMovieModule,
     StreamingModule,
+    SeriesMovieModule,
   ],
   controllers: [AppController],
 })

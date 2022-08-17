@@ -82,19 +82,20 @@ model Language {
 
 // To allow movie files to be uploaded individually as updates to the movie 
 // The poster, trailer & video are set to optional 
+
 model SingleMovie {
   id                      Int                           @id @default(autoincrement())
   title                   String
   description             String
   duration                String
-  posterUrl               String?  
-  trailerUrl              String? 
+  posterUrl               String?
+  trailerUrl              String?
   videoKey                String?
   filesFolder             String? // only necessary if the movie is uploaded on disk
   singleMovieFiles        SingleMovieFiles[]
-  isReleased              Boolean       @default(false)
+  isReleased              Boolean                       @default(false)
   isPremiering            Boolean                       @default(true)
-  price                   String
+  price                   String?
   userPremieringPurchases UserPremieringMoviePurchase[]
   views                   Int                           @default(0)
   genres                  Genre[]
@@ -126,11 +127,13 @@ model SeriesMovie {
   id               Int                   @id @default(autoincrement())
   title            String
   description      String
-  posterUrl        String
-  trailerUrl       String
+  posterUrl        String?
+  trailerUrl       String?
+  seriesMovieFiles SeriesMovieFiles[]
+  isReleased       Boolean               @default(false)
   isPremiering     Boolean               @default(false)
   views            Int                   @default(0)
-  seasons          Season[]
+  seasons          SeriesSeason[]
   genres           Genre[]
   languages        Language[]
   contentCreator   ContentCreator        @relation(fields: [contentCreatorId], references: [id])
@@ -140,37 +143,69 @@ model SeriesMovie {
   updatedAt        DateTime              @updatedAt
 }
 
-model Season {
+model SeriesMovieFiles {
+  id            Int           @id @default(autoincrement())
+  seriesMovie   SeriesMovie   @relation(fields: [seriesMovieId], references: [id], onDelete: Cascade)
+  seriesMovieId Int
+  fileKey       String        @unique
+  fileType      MovieFileType
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model SeriesSeason {
   id                      Int                           @id @default(autoincrement())
   title                   String
   description             String
-  posterUrl               String
-  trailerUrl              String
+  posterUrl               String?
+  trailerUrl              String?
+  seriesSeasonFiles       SeriesSeasonFiles[]
   isPremiering            Boolean                       @default(false)
-  price                   String
+  price                   String?
   views                   Int                           @default(0)
   userPremieringPurchases UserPremieringMoviePurchase[]
-  episodes                Episode[]
-  seriesMovie             SeriesMovie                   @relation(fields: [seriesMovieId], references: [id])
+  episodes                SeasonEpisode[]
+  seriesMovie             SeriesMovie                   @relation(fields: [seriesMovieId], references: [id], onDelete: Cascade)
   seriesMovieId           Int
   createdAt               DateTime                      @default(now())
   updatedAt               DateTime                      @updatedAt
 }
 
-model Episode {
-  id          Int      @id @default(autoincrement())
-  number      Int
-  title       String
-  description String
-  duration    String
-  posterUrl   String
-  trailerUrl  String
-  videoUrl    String
-  views       Int      @default(0)
-  season      Season   @relation(fields: [seasonId], references: [id])
-  seasonId    Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model SeriesSeasonFiles {
+  id             Int           @id @default(autoincrement())
+  seriesSeason   SeriesSeason  @relation(fields: [seriesSeasonId], references: [id], onDelete: Cascade)
+  seriesSeasonId Int
+  fileKey        String        @unique
+  fileType       MovieFileType
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model SeasonEpisode {
+  id                 Int                  @id @default(autoincrement())
+  number             Int
+  title              String
+  description        String
+  duration           String
+  posterUrl          String?
+  trailerUrl         String?
+  videoUrl           String?
+  seasonEpisodeFiles SeasonEpisodeFiles[]
+  views              Int                  @default(0)
+  season             SeriesSeason         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId           Int
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model SeasonEpisodeFiles {
+  id              Int           @id @default(autoincrement())
+  seasonEpisode   SeasonEpisode @relation(fields: [seasonEpisodeId], references: [id], onDelete: Cascade)
+  seasonEpisodeId Int
+  fileKey         String        @unique
+  fileType        MovieFileType
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model UserMovieWatchLater {
@@ -186,15 +221,15 @@ model UserMovieWatchLater {
 }
 
 model UserPremieringMoviePurchase {
-  id                  Int         @id @default(autoincrement())
-  user                User        @relation(fields: [userId], references: [id])
+  id                  Int          @id @default(autoincrement())
+  user                User         @relation(fields: [userId], references: [id])
   userId              Int
-  singleMovie         SingleMovie @relation(fields: [singleMovieId], references: [id])
+  singleMovie         SingleMovie  @relation(fields: [singleMovieId], references: [id])
   singleMovieId       Int
-  seriesMovieSeason   Season      @relation(fields: [seriesMovieSeasonId], references: [id])
+  seriesMovieSeason   SeriesSeason @relation(fields: [seriesMovieSeasonId], references: [id])
   seriesMovieSeasonId Int
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 }
 
 enum PackageName {
