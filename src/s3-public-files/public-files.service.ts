@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { AWSError, S3 } from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuid } from 'uuid';
@@ -13,26 +17,31 @@ export class PublicFilesService {
   ) {}
 
   /**
-   * Uploads a file to S3 and saves the file metadata to the db
-   * i.e file key, url to access the file, and the owner id
-   * @param filename
-   * @param dataBuffer
-   * @returns {Promise<PublicFile>} - the file metadata
+   * Uploads a file to S3
+   * @param filename - the name of the file
+   * @param dataBuffer - the file to upload
+   * @returns {Promise<S3.ManagedUpload.SendData>} - s3 upload result
    */
   async uploadMovieFile(
     filename: string,
     dataBuffer: Buffer,
   ): Promise<S3.ManagedUpload.SendData> {
     const s3 = new S3();
-    const uploadResult = await s3
-      .upload({
-        Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
-        Body: dataBuffer,
-        Key: `${uuid()}-${filename}`,
-      })
-      .promise();
+    try {
+      const uploadResult = await s3
+        .upload({
+          Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
+          Body: dataBuffer,
+          Key: `${uuid()}-${filename}`,
+        })
+        .promise();
 
-    return uploadResult;
+      return uploadResult;
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Error uploading file to s3: ${e.message}`,
+      );
+    }
   }
 
   /**
@@ -48,13 +57,20 @@ export class PublicFilesService {
     dataBuffer: Buffer,
   ): Promise<PublicFile> {
     const s3 = new S3();
-    const uploadResult = await s3
-      .upload({
-        Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
-        Body: dataBuffer,
-        Key: `${uuid()}-${filename}`,
-      })
-      .promise();
+    let uploadResult: S3.ManagedUpload.SendData;
+    try {
+      uploadResult = await s3
+        .upload({
+          Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
+          Body: dataBuffer,
+          Key: `${uuid()}-${filename}`,
+        })
+        .promise();
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Error uploading file to s3: ${e.message}`,
+      );
+    }
 
     const newFile = await this.prismaService.publicFile.create({
       data: {
@@ -115,13 +131,19 @@ export class PublicFilesService {
     fileId: string,
   ): Promise<S3.DeleteObjectOutput | AWSError> {
     const s3 = new S3();
-    await s3
-      .deleteObject({
-        Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
-        Key: fileId,
-      })
-      .promise();
-    return;
+    try {
+      await s3
+        .deleteObject({
+          Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
+          Key: fileId,
+        })
+        .promise();
+      return;
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Error deleting file from s3: ${e.message}`,
+      );
+    }
   }
 
   /**
@@ -146,12 +168,18 @@ export class PublicFilesService {
       );
     }
     const s3 = new S3();
-    await s3
-      .deleteObject({
-        Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
-        Key: file.key,
-      })
-      .promise();
+    try {
+      await s3
+        .deleteObject({
+          Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
+          Key: file.key,
+        })
+        .promise();
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Error deleting file from s3: ${e.message}`,
+      );
+    }
 
     await this.prismaService.publicFile.delete({
       where: { id: fileId },
