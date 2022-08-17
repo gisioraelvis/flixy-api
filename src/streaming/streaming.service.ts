@@ -32,7 +32,7 @@ export class StreamingService {
    * @param req
    * @param res
    *
-   * @see https://www.smashingmagazine.com/2021/04/building-video-streaming-app-nuxtjs-node-express/
+   * @see https://www.smashingmagazine.com/2021/04/building-video-streaming-app-nuxtjs-node-express/#streaming-the-videos
    */
   async onDiskFileStream(
     filePath: string,
