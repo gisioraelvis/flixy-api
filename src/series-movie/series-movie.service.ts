@@ -81,7 +81,7 @@ export class SeriesMovieService {
     });
     if (!user.isContentCreator) {
       throw new UnauthorizedException(
-        `User with id ${userId} is not a content creator hence cannot upload movies`,
+        `User id #${userId} is not authorized to upload movies`,
       );
     }
 
@@ -110,8 +110,10 @@ export class SeriesMovieService {
           trailer.buffer,
         );
       }
-    } catch (error) {
-      throw new InternalServerErrorException('Error saving series movie files');
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Error saving series movie files: ${e.message}`,
+      );
     }
 
     // parse genres from string to array
@@ -160,9 +162,9 @@ export class SeriesMovieService {
     if (poster) {
       await this.prisma.seriesMovieFiles.create({
         data: {
-          seriesMovieId: newSeriesMovie.id,
           fileKey: posterUploadResult.Key,
           fileType: MovieFileType.POSTER,
+          seriesMovie: { connect: { id: newSeriesMovie.id } },
         },
       });
     }
@@ -171,9 +173,9 @@ export class SeriesMovieService {
     if (trailer) {
       await this.prisma.seriesMovieFiles.create({
         data: {
-          seriesMovieId: newSeriesMovie.id,
           fileKey: trailerUploadResult.Key,
           fileType: MovieFileType.TRAILER,
+          seriesMovie: { connect: { id: newSeriesMovie.id } },
         },
       });
     }
@@ -217,7 +219,7 @@ export class SeriesMovieService {
       include: { genres: true, languages: true, seasons: true },
     });
     if (!seriesMovie) {
-      throw new NotFoundException(`SeriesMovie with id ${id} does not exist`);
+      throw new NotFoundException(`SeriesMovie with id #${id} does not exist`);
     }
     return seriesMovie;
   }
@@ -232,7 +234,9 @@ export class SeriesMovieService {
       where: { title: { contains: title } },
     });
     if (!seriesMovie) {
-      throw new NotFoundException(`movie with title ${title} does not exist`);
+      throw new NotFoundException(
+        `No Series Movie with title "${title}" was found`,
+      );
     }
     return seriesMovie;
   }
@@ -263,7 +267,7 @@ export class SeriesMovieService {
       include: { genres: true, languages: true, seriesMovieFiles: true },
     });
     if (!seriesMovie) {
-      throw new NotFoundException(`SeriesMovie with id ${id} does not exist`);
+      throw new NotFoundException(`SeriesMovie with id #${id} does not exist`);
     }
 
     const { genres, languages } = updateSeriesMovieDto;
@@ -311,9 +315,9 @@ export class SeriesMovieService {
 
           await this.publicFileService.deleteMovieFile(currentPoster.fileKey);
         }
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error deleting current poster from s3',
+          `Error deleting current poster from s3: ${e.message}`,
         );
       }
 
@@ -324,9 +328,9 @@ export class SeriesMovieService {
           newPosterOriginalname,
           newPoster.buffer,
         );
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error uploading new poster to s3',
+          `Error uploading new poster to s3: ${e.message}`,
         );
       }
       updateSeriesMovieDto.posterUrl = newPosterUploadResult.Location;
@@ -350,9 +354,9 @@ export class SeriesMovieService {
 
           await this.publicFileService.deleteMovieFile(currentTrailer.fileKey);
         }
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error deleting current trailer from s3',
+          `Error deleting current trailer from s3: ${e.message}`,
         );
       }
       const newTrailer = files.find((file) => file.fieldname === 'trailer');
@@ -362,9 +366,9 @@ export class SeriesMovieService {
           newTrailerOriginalname,
           newTrailer.buffer,
         );
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error uploading new trailer to s3',
+          `Error uploading new trailer to s3: ${e.message}`,
         );
       }
       updateSeriesMovieDto.trailerUrl = newTrailerUploadResult.Location;
@@ -436,9 +440,9 @@ export class SeriesMovieService {
     if (poster) {
       await this.prisma.seriesMovieFiles.create({
         data: {
-          seriesMovieId: updatedSeriesMovie.id,
           fileKey: newPosterUploadResult.Key,
           fileType: MovieFileType.POSTER,
+          seriesMovie: { connect: { id: updatedSeriesMovie.id } },
         },
       });
     }
@@ -447,9 +451,9 @@ export class SeriesMovieService {
     if (trailer) {
       await this.prisma.seriesMovieFiles.create({
         data: {
-          seriesMovieId: updatedSeriesMovie.id,
           fileKey: newTrailerUploadResult.Key,
           fileType: MovieFileType.TRAILER,
+          seriesMovie: { connect: { id: updatedSeriesMovie.id } },
         },
       });
     }
@@ -470,12 +474,13 @@ export class SeriesMovieService {
       include: { seriesMovieFiles: true },
     });
     if (!seriesMovie) {
-      throw new NotFoundException(`Series Movie with id ${id} does not exist`);
+      throw new NotFoundException(`SeriesMovie id #${id} does not exist`);
     }
 
     // get the public movie files i.e poster and trailer
     const publicSeriesMovieFiles = seriesMovie.seriesMovieFiles;
 
+    // TODO: Delete season and episodes files as well from s3 and db if exists
     try {
       // It's possible that the movie has no public files yet, hence need to check
       // delete all the movie files from s3
@@ -486,9 +491,9 @@ export class SeriesMovieService {
           ),
         );
       }
-    } catch (error) {
+    } catch (e) {
       throw new InternalServerErrorException(
-        `Error deleting movie files from s3`,
+        `Error deleting movie files from s3: ${e.message}`,
       );
     }
 
@@ -497,6 +502,9 @@ export class SeriesMovieService {
       where: { id },
     });
 
-    return { statusCode: 200, message: `${seriesMovie.title} deleted` };
+    return {
+      statusCode: 200,
+      message: `SeriesMovie "${seriesMovie.title}" deleted`,
+    };
   }
 }

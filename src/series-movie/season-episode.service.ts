@@ -305,7 +305,6 @@ export class SeasonEpisodeService {
             where: { fileKey: currentVideoKey },
           });
 
-          // TODO: Check if file exists in db before calling delete on s3
           await this.privateFileService.deleteMovieFile(currentVideoKey);
         }
       } catch (e) {

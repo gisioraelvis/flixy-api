@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateSeriesSeasonDto } from './dto/create-series-movie.dto';
 import { UpdateSeriesSeasonDto } from './dto/update-series-movie.dto';
@@ -21,7 +22,10 @@ export class SeriesSeasonService {
 
   /**
    * Create a new series season
+   * @param userId
+   * @param seriesMovieId
    * @param createSeriesSeasonDto
+   * @param files - the movie files array i.e poster and trailer
    * @returns {Promise<SeriesSeason>}
    */
   async create(
@@ -30,17 +34,6 @@ export class SeriesSeasonService {
     createSeriesSeasonDto: CreateSeriesSeasonDto,
     files: any[],
   ): Promise<SeriesSeason> {
-    // get series movie
-    const seriesMovie = await this.prisma.seriesMovie.findUnique({
-      where: { id: seriesMovieId },
-      select: { id: true },
-    });
-    if (!seriesMovie) {
-      throw new NotFoundException(
-        `SeriesMovie with id ${seriesMovieId} does not exist`,
-      );
-    }
-
     // TODO: Authorization - Admin/Content creator only
     // check if user is an admin or a content creator - i.e allowed to upload movies
     const user = await this.prisma.user.findUnique({
@@ -48,7 +41,29 @@ export class SeriesSeasonService {
     });
     if (!user.isContentCreator) {
       throw new UnauthorizedException(
-        `User with id ${userId} is not a content creator hence cannot upload movies`,
+        `User with id #${userId} is not authorized to upload movies`,
+      );
+    }
+
+    // get series movie and check if it exists
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: { seasons: true },
+    });
+    if (!seriesMovie) {
+      throw new NotFoundException(
+        `SeriesMovie with id #${seriesMovieId} does not exist`,
+      );
+    }
+
+    // using series number on createSeriesSeasonDto
+    // check if season already exists on the current series movie
+    const seriesSeason = seriesMovie.seasons.find(
+      (season) => season.seasonNumber === createSeriesSeasonDto.seasonNumber,
+    );
+    if (seriesSeason) {
+      throw new BadRequestException(
+        `Season ${createSeriesSeasonDto.seasonNumber} already exists on SeriesMovie id #${seriesMovieId}`,
       );
     }
 
@@ -77,8 +92,10 @@ export class SeriesSeasonService {
           trailer.buffer,
         );
       }
-    } catch (error) {
-      throw new InternalServerErrorException('Error saving series movie files');
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Error saving series movie files: ${e.message}`,
+      );
     }
 
     // if any of the files was provided and uploaded successfully get the appropriate value
@@ -103,9 +120,9 @@ export class SeriesSeasonService {
     if (poster) {
       await this.prisma.seriesSeasonFiles.create({
         data: {
-          seriesSeasonId: newSeriesSeason.id,
           fileKey: posterUploadResult.Key,
           fileType: MovieFileType.POSTER,
+          seriesSeason: { connect: { id: newSeriesSeason.id } },
         },
       });
     }
@@ -114,9 +131,9 @@ export class SeriesSeasonService {
     if (trailer) {
       await this.prisma.seriesSeasonFiles.create({
         data: {
-          seriesSeasonId: newSeriesSeason.id,
           fileKey: trailerUploadResult.Key,
           fileType: MovieFileType.TRAILER,
+          seriesSeason: { connect: { id: newSeriesSeason.id } },
         },
       });
     }
@@ -126,17 +143,35 @@ export class SeriesSeasonService {
 
   /**
    * Find a series season by id
-   * @param id - seriesSeason id
+   * @param seriesMovieId
+   * @param seasonId
    * @returns {Promise<SeriesSeason>}
    */
-  async findOneById(id: number): Promise<SeriesSeason> {
-    const seriesSeason = await this.prisma.seriesSeason.findUnique({
-      where: { id },
-      include: { episodes: true },
+  async findOneById(
+    seriesMovieId: number,
+    seasonId: number,
+  ): Promise<SeriesSeason> {
+    // check if series movie exists
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: { seasons: true },
     });
-    if (!seriesSeason) {
-      throw new NotFoundException(`Series Season with id ${id} does not exist`);
+    if (!seriesMovie) {
+      throw new NotFoundException(
+        `SeriesMovie with id #${seriesMovieId} does not exist`,
+      );
     }
+
+    // check if current seriesMovie has seasonId provided
+    const seriesSeason = seriesMovie.seasons.find(
+      (season) => season.id === seasonId,
+    );
+    if (!seriesSeason) {
+      throw new NotFoundException(
+        `SeriesSeason with id #${seasonId} does not exist on SeriesMovie with id #${seriesMovieId}`,
+      );
+    }
+
     return seriesSeason;
   }
 
@@ -150,7 +185,9 @@ export class SeriesSeasonService {
       where: { title: { contains: title } },
     });
     if (!seriesSeason) {
-      throw new NotFoundException(`movie with title ${title} does not exist`);
+      throw new NotFoundException(
+        `No Series Movie Season with title "${title}" was found`,
+      );
     }
     return seriesSeason;
   }
@@ -176,7 +213,7 @@ export class SeriesSeasonService {
     }
 
     const seriesSeason = seriesMovie.seasons.find(
-      (season) => season.number === seriesSeasonNumber,
+      (season) => season.seasonNumber === seriesSeasonNumber,
     );
 
     return seriesSeason;
@@ -184,7 +221,8 @@ export class SeriesSeasonService {
 
   /**
    * Update series season details
-   * @param id - series season id
+   * @param seriesMovieId
+   * @param seasonId
    * @param updateSeriesSeasonDto
    * @returns {Promise<SeriesSeason>} - updated series season
    *
@@ -199,17 +237,30 @@ export class SeriesSeasonService {
    * the movie files(poster, trailer) should be deleted from s3 before uploading any new one.
    */
   async update(
-    id: number,
+    seriesMovieId: number,
+    seasonId: number,
     updateSeriesSeasonDto: UpdateSeriesSeasonDto,
     files: any[],
   ): Promise<SeriesSeason> {
-    // TODO: To update a series season the series movie id should be passed as well
-    const seriesSeason = await this.prisma.seriesSeason.findUnique({
-      where: { id },
-      include: { seriesSeasonFiles: true },
+    // check if the seriesMovieId exists
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: { seasons: { include: { seriesSeasonFiles: true } } },
     });
+    if (!seriesMovie) {
+      throw new NotFoundException(
+        `Series Movie with id #${seriesMovieId} does not exist`,
+      );
+    }
+
+    // check if the seasonId exists on the current series movie
+    const seriesSeason = seriesMovie.seasons.find(
+      (season) => season.id === seasonId,
+    );
     if (!seriesSeason) {
-      throw new NotFoundException(`Series Season with id ${id} does not exist`);
+      throw new NotFoundException(
+        `Series Season with id #${seasonId} does not exist`,
+      );
     }
 
     // if newposter is provided
@@ -231,9 +282,9 @@ export class SeriesSeasonService {
 
           await this.publicFileService.deleteMovieFile(currentPoster.fileKey);
         }
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error deleting current poster from s3',
+          `Error deleting current poster from s3: ${e.message}`,
         );
       }
 
@@ -244,9 +295,9 @@ export class SeriesSeasonService {
           newPosterOriginalname,
           newPoster.buffer,
         );
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error uploading new poster to s3',
+          `Error uploading new poster to s3: ${e.message}`,
         );
       }
       updateSeriesSeasonDto.posterUrl = newPosterUploadResult.Location;
@@ -270,9 +321,9 @@ export class SeriesSeasonService {
 
           await this.publicFileService.deleteMovieFile(currentTrailer.fileKey);
         }
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error deleting current trailer from s3',
+          `Error deleting current trailer from s3: ${e.message}`,
         );
       }
       const newTrailer = files.find((file) => file.fieldname === 'trailer');
@@ -282,16 +333,16 @@ export class SeriesSeasonService {
           newTrailerOriginalname,
           newTrailer.buffer,
         );
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error uploading new trailer to s3',
+          `Error uploading new trailer to s3: ${e.message}`,
         );
       }
       updateSeriesSeasonDto.trailerUrl = newTrailerUploadResult.Location;
     }
 
     const updatedSeriesSeason = await this.prisma.seriesSeason.update({
-      where: { id },
+      where: { id: seasonId },
       data: {
         ...updateSeriesSeasonDto,
       },
@@ -324,18 +375,33 @@ export class SeriesSeasonService {
 
   /**
    * Delete Series Season
-   * @param id - Series Season id
+   * @param seriesMovieId
+   * @param seasonId
    * @returns {Promise<any>}
    */
-  async remove(id: number): Promise<any> {
+  async remove(seriesMovieId: number, seasonId: number): Promise<any> {
     // TODO: Restrict to only Admin & Content creator(ownerId)
     //  Only admin and movie owner(content creator) should be allowed to delete a movie
-    const seriesSeason = await this.prisma.seriesSeason.findUnique({
-      where: { id },
-      include: { seriesSeasonFiles: true },
+
+    // check if the seriesMovieId exists
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: { seasons: { include: { seriesSeasonFiles: true } } },
     });
+    if (!seriesMovie) {
+      throw new NotFoundException(
+        `SeriesMovie id #${seriesMovieId} does not exist`,
+      );
+    }
+
+    // check if the seasonId exists on the current series movie
+    const seriesSeason = seriesMovie.seasons.find(
+      (season) => season.id === seasonId,
+    );
     if (!seriesSeason) {
-      throw new NotFoundException(`Series Movie with id ${id} does not exist`);
+      throw new NotFoundException(
+        `SeriesSeason id #${seasonId} does not exist on SeriesMovie id #${seriesMovieId}`,
+      );
     }
 
     // get the public season files i.e poster and trailer
@@ -353,15 +419,18 @@ export class SeriesSeasonService {
       }
     } catch (e) {
       throw new InternalServerErrorException(
-        `Error deleting movie files from s3: ${e.message}`,
+        `Error deleting Season files from s3: ${e.message}`,
       );
     }
 
     // delete Series Season and all its associated tables from db
     await this.prisma.seriesSeason.delete({
-      where: { id },
+      where: { id: seasonId },
     });
 
-    return { statusCode: 200, message: `${seriesSeason.number} deleted` };
+    return {
+      statusCode: 200,
+      message: `Season ${seriesSeason.seasonNumber} deleted successfully`,
+    };
   }
 }

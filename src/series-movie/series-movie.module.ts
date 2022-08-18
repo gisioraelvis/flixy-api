@@ -8,6 +8,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PrivateFileService } from 'src/s3-private-files/private-files.service';
 import { PublicFilesService } from 'src/s3-public-files/public-files.service';
 import { SeriesSeasonService } from './series-season.service';
+import { SeasonEpisodeService } from './season-episode.service';
 
 @Module({
   imports: [CommonModule, PublicFileModule, PrivateFileModule],
@@ -18,6 +19,7 @@ import { SeriesSeasonService } from './series-season.service';
     PublicFilesService,
     SeriesMovieService,
     SeriesSeasonService,
+    SeasonEpisodeService,
   ],
 })
 export class SeriesMovieModule {}

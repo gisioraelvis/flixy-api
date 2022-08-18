@@ -153,7 +153,7 @@ export class PublicFilesService {
    * @returns {Promise<any>}
    */
   async deleteFile(ownerId: number, fileId: number): Promise<any> {
-    //TODO: Admin can delete any file (not just their own)
+    //TODO: Authorize Admin to delete any file (not just their own)
 
     // users should only delete their own files
     const file = await this.prismaService.publicFile.findFirst({

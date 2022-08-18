@@ -25,11 +25,11 @@ export class CreateSeriesMovieDto {
 
 export class CreateSeriesSeasonDto {
   @IsNotEmpty()
-  @IsString()
-  title: string;
+  seasonNumber: number;
 
   @IsNotEmpty()
-  number: number;
+  @IsString()
+  title: string;
 
   @IsNotEmpty()
   @IsString()
@@ -38,13 +38,18 @@ export class CreateSeriesSeasonDto {
   @IsNotEmpty()
   isPremiering: boolean;
 
+  @IsNotEmpty()
   price: string;
+
   posterUrl: string;
   trailerUrl: string;
   filesFolder: string;
 }
 
 export class CreateSeasonEpisodeDto {
+  @IsNotEmpty()
+  episodeNumber: number;
+
   @IsNotEmpty()
   @IsString()
   title: string;

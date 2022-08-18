@@ -256,7 +256,7 @@ export class SingleMovieService {
       where: { title: { contains: title } },
     });
     if (!singleMovie) {
-      throw new NotFoundException(`movie with title ${title} does not exist`);
+      throw new NotFoundException(`No Movie with title "${title}" was found`);
     }
     return singleMovie;
   }
