@@ -158,7 +158,7 @@ model SeriesSeason {
   id                      Int                           @id @default(autoincrement())
   seriesMovie             SeriesMovie                   @relation(fields: [seriesMovieId], references: [id], onDelete: Cascade)
   seriesMovieId           Int
-  number                  Int
+  seasonNumber            Int
   title                   String
   description             String
   posterUrl               String?
@@ -188,7 +188,7 @@ model SeasonEpisode {
   id                 Int                  @id @default(autoincrement())
   season             SeriesSeason         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   seasonId           Int
-  number             Int                 @unique
+  episodeNumber      Int
   title              String
   description        String
   duration           String
