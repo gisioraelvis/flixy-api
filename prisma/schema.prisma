@@ -91,17 +91,17 @@ model SingleMovie {
   posterUrl               String?
   trailerUrl              String?
   videoKey                String?
-  filesFolder             String? // only necessary if the movie is uploaded on disk
+  filesFolder             String?
   singleMovieFiles        SingleMovieFiles[]
   isReleased              Boolean                       @default(false)
   isPremiering            Boolean                       @default(true)
   price                   String?
-  userPremieringPurchases UserPremieringMoviePurchase[]
-  views                   Int                           @default(0)
   genres                  Genre[]
   languages               Language[]
+  views                   Int                           @default(0)
   contentCreator          ContentCreator                @relation(fields: [contentCreatorId], references: [id])
   contentCreatorId        Int
+  userPremieringPurchases UserPremieringMoviePurchase[]
   userWatchLaters         UserMovieWatchLater[]
   createdAt               DateTime                      @default(now())
   updatedAt               DateTime                      @updatedAt
@@ -129,13 +129,14 @@ model SeriesMovie {
   description      String
   posterUrl        String?
   trailerUrl       String?
+  filesFolder      String?
   seriesMovieFiles SeriesMovieFiles[]
   isReleased       Boolean               @default(false)
   isPremiering     Boolean               @default(false)
   views            Int                   @default(0)
-  seasons          SeriesSeason[]
   genres           Genre[]
   languages        Language[]
+  seasons          SeriesSeason[]
   contentCreator   ContentCreator        @relation(fields: [contentCreatorId], references: [id])
   contentCreatorId Int
   userWatchLater   UserMovieWatchLater[]
@@ -155,19 +156,20 @@ model SeriesMovieFiles {
 
 model SeriesSeason {
   id                      Int                           @id @default(autoincrement())
+  seriesMovie             SeriesMovie                   @relation(fields: [seriesMovieId], references: [id], onDelete: Cascade)
+  seriesMovieId           Int
   number                  Int
   title                   String
   description             String
   posterUrl               String?
   trailerUrl              String?
+  filesFolder             String?
   seriesSeasonFiles       SeriesSeasonFiles[]
   isPremiering            Boolean                       @default(false)
   price                   String?
   views                   Int                           @default(0)
   userPremieringPurchases UserPremieringMoviePurchase[]
   episodes                SeasonEpisode[]
-  seriesMovie             SeriesMovie                   @relation(fields: [seriesMovieId], references: [id], onDelete: Cascade)
-  seriesMovieId           Int
   createdAt               DateTime                      @default(now())
   updatedAt               DateTime                      @updatedAt
 }
@@ -184,17 +186,18 @@ model SeriesSeasonFiles {
 
 model SeasonEpisode {
   id                 Int                  @id @default(autoincrement())
-  number             Int
+  season             SeriesSeason         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId           Int
+  number             Int                 @unique
   title              String
   description        String
   duration           String
   posterUrl          String?
   trailerUrl         String?
-  videoUrl           String?
+  videoKey           String?
+  filesFolder        String?
   seasonEpisodeFiles SeasonEpisodeFiles[]
   views              Int                  @default(0)
-  season             SeriesSeason         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  seasonId           Int
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 }
