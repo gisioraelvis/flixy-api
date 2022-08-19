@@ -12,14 +12,16 @@ import {
 } from 'src/utils/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MovieFileType, Prisma, SeriesMovie } from '@prisma/client';
-import { PublicFilesService } from 'src/s3-public-files/public-files.service';
+import { PublicFileService } from 'src/s3-public-file/public-file.service';
+import { PrivateFileService } from 'src/s3-private-file/private-file.service';
 import { S3 } from 'aws-sdk';
 
 @Injectable()
 export class SeriesMovieService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly publicFileService: PublicFilesService,
+    private readonly publicFileService: PublicFileService,
+    private readonly privateFileService: PrivateFileService,
   ) {}
 
   /**
@@ -463,48 +465,109 @@ export class SeriesMovieService {
 
   /**
    * Delete SeriesMovie
-   * @param id - SeriesMovie id
+   * @param seriesMovieId
    * @returns {Promise<any>}
    */
-  async remove(id: number): Promise<any> {
+  async remove(seriesMovieId: number): Promise<any> {
     // TODO: Restrict to only Admin & Content creator(ownerId)
     //  Only admin and movie owner(content creator) should be allowed to delete a movie
     const seriesMovie = await this.prisma.seriesMovie.findUnique({
-      where: { id },
-      include: { seriesMovieFiles: true },
+      where: { id: seriesMovieId },
+      include: {
+        seriesMovieFiles: true,
+        seasons: {
+          include: {
+            seriesSeasonFiles: true,
+            episodes: { include: { seasonEpisodeFiles: true } },
+          },
+        },
+      },
     });
     if (!seriesMovie) {
-      throw new NotFoundException(`SeriesMovie id #${id} does not exist`);
+      throw new NotFoundException(
+        `SeriesMovie id #${seriesMovieId} does not exist`,
+      );
     }
 
-    // get the public movie files i.e poster and trailer
-    const publicSeriesMovieFiles = seriesMovie.seriesMovieFiles;
+    // delete all the files associated with the SeriesMovie if any exists
+    // it's possible that the SeriesMovie, Seasons or Episodes don't have any files
+    // associated with them so we need to check for each one
+    // i.e
+    // - all the SeriesMovieFiles - poster and trailer
+    // - all the SeasonFiles - poster and trailer
+    // - all the EpisodeFiles - poster, trailer and video
 
-    // TODO: Delete season and episodes files as well from s3 and db if exists
-    try {
-      // It's possible that the movie has no public files yet, hence need to check
-      // delete all the movie files from s3
-      if (publicSeriesMovieFiles.length > 0) {
-        await Promise.all(
-          publicSeriesMovieFiles.map((file) =>
-            this.publicFileService.deleteMovieFile(file.fileKey),
-          ),
-        );
-      }
-    } catch (e) {
-      throw new InternalServerErrorException(
-        `Error deleting movie files from s3: ${e.message}`,
+    // delete all the SeriesMovieFiles from s3 if any exists
+    if (seriesMovie.seriesMovieFiles.length > 0) {
+      await Promise.all(
+        seriesMovie.seriesMovieFiles.map(async (file) => {
+          // the files are public
+          await this.publicFileService.deleteMovieFile(file.fileKey);
+        }),
+      );
+    }
+
+    // delete all the SeasonFiles from s3 if any exists
+    if (seriesMovie.seasons.length > 0) {
+      await Promise.all(
+        // array of SeriesMovie seasons
+        seriesMovie.seasons.map(async (season) => {
+          if (season.seriesSeasonFiles.length > 0) {
+            await Promise.all(
+              // array of SeasonFiles
+              season.seriesSeasonFiles.map(async (file) => {
+                // the files are public
+                await this.publicFileService.deleteMovieFile(file.fileKey);
+              }),
+            );
+          }
+        }),
+      );
+    }
+
+    // delete all the EpisodeFiles from s3 - the poster and trailer are public files
+    // the videos are private files, filter them and use privateFileService to delete them
+    if (seriesMovie.seasons.length > 0) {
+      await Promise.all(
+        // array of SeriesMovie seasons
+        seriesMovie.seasons.map(async (season) => {
+          if (season.episodes.length > 0) {
+            await Promise.all(
+              // array of Episodes
+              season.episodes.map(async (episode) => {
+                if (episode.seasonEpisodeFiles.length > 0) {
+                  await Promise.all(
+                    // array of EpisodeFiles
+                    episode.seasonEpisodeFiles.map(async (file) => {
+                      if (file.fileType === MovieFileType.VIDEO) {
+                        // the video files are private
+                        await this.privateFileService.deleteMovieFile(
+                          file.fileKey,
+                        );
+                      } else {
+                        // the poster and trailer files are public
+                        await this.publicFileService.deleteMovieFile(
+                          file.fileKey,
+                        );
+                      }
+                    }),
+                  );
+                }
+              }),
+            );
+          }
+        }),
       );
     }
 
     // delete SeriesMovie and all its associated tables from db
     await this.prisma.seriesMovie.delete({
-      where: { id },
+      where: { id: seriesMovieId },
     });
 
     return {
       statusCode: 200,
-      message: `SeriesMovie "${seriesMovie.title}" deleted`,
+      message: `SeriesMovie id #${seriesMovieId} deleted`,
     };
   }
 }

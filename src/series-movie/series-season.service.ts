@@ -208,7 +208,7 @@ export class SeriesSeasonService {
     });
     if (!seriesMovie) {
       throw new NotFoundException(
-        `Series Movie with id ${seriesMovieId} does not exist`,
+        `SeriesMovie id #${seriesMovieId} does not exist`,
       );
     }
 
@@ -217,6 +217,25 @@ export class SeriesSeasonService {
     );
 
     return seriesSeason;
+  }
+
+  /**
+   * Finds all the current SeriesMovie seasons
+   * @param seriesMovieId
+   * @returns {Promise<SeriesSeason[]>}
+   */
+  async findAll(seriesMovieId: number): Promise<SeriesSeason[]> {
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: { seasons: true },
+    });
+    if (!seriesMovie) {
+      throw new NotFoundException(
+        `SeriesMovie id #${seriesMovieId} does not exist`,
+      );
+    }
+
+    return seriesMovie.seasons;
   }
 
   /**
@@ -249,7 +268,7 @@ export class SeriesSeasonService {
     });
     if (!seriesMovie) {
       throw new NotFoundException(
-        `Series Movie with id #${seriesMovieId} does not exist`,
+        `SeriesMovie id #${seriesMovieId} does not exist`,
       );
     }
 
@@ -259,7 +278,7 @@ export class SeriesSeasonService {
     );
     if (!seriesSeason) {
       throw new NotFoundException(
-        `Series Season with id #${seasonId} does not exist`,
+        `SeriesSeason id #${seasonId} does not exist on SeriesMovie id #${seriesMovieId}`,
       );
     }
 
@@ -430,7 +449,7 @@ export class SeriesSeasonService {
 
     return {
       statusCode: 200,
-      message: `Season ${seriesSeason.seasonNumber} deleted successfully`,
+      message: `Season ${seriesSeason.seasonNumber} of SeriesMovie id #${seriesMovieId} deleted successfully`,
     };
   }
 }

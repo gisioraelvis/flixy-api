@@ -41,7 +41,7 @@ export class SeriesMovieController {
   //---SeriesMovie Endpoints------------------------------------------
 
   // create a new seriesMovie
-  @Post('/create')
+  @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(AnyFilesInterceptor())
   createSeriesMovie(
@@ -98,7 +98,7 @@ export class SeriesMovieController {
 
   // create a new series season for a series movie
   // takes the series movie id linked to as a param
-  @Post(':id/seasons/create/')
+  @Post(':id/seasons')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(AnyFilesInterceptor())
   createSeriesSeason(
@@ -129,6 +129,12 @@ export class SeriesMovieController {
     @Param('seasonId') seasonId: string,
   ) {
     return this.seriesSeasonService.findOneById(+seriesMovieId, +seasonId);
+  }
+
+  // find series season by id
+  @Get(':seriesMovieId/seasons')
+  findAllSeriesMovieSeasons(@Param('seriesMovieId') seriesMovieId: string) {
+    return this.seriesSeasonService.findAll(+seriesMovieId);
   }
 
   // update series season given its id
@@ -163,7 +169,7 @@ export class SeriesMovieController {
    * ---Season Episode Endpoints-------------------------------------------------
    */
   // create a new singleMovie
-  @Post('/create/:id')
+  @Post('/:id')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(AnyFilesInterceptor())
   create(
