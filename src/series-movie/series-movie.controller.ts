@@ -168,13 +168,15 @@ export class SeriesMovieController {
   /**
    * ---Season Episode Endpoints-------------------------------------------------
    */
-  // create a new singleMovie
-  @Post('/:id')
+
+  // create new Episode for a Season of a Seriesmovie
+  @Post('/:seriesMovieId/seasons/:seasonId/episodes')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(AnyFilesInterceptor())
-  create(
+  createSeasonEpisode(
     @Req() req: RequestWithUser,
-    @Param('id') seasonId: string,
+    @Param('seriesMovieId') seriesMovieId: string,
+    @Param('seasonId') seasonId: string,
     @Body() createSeasonEpisodeDto: CreateSeasonEpisodeDto,
     @UploadedFiles()
     files: Array<Express.Multer.File>,
@@ -182,37 +184,68 @@ export class SeriesMovieController {
     return this.seasonEpisodeService.create(
       req.user.id,
       +seasonId,
+      +seriesMovieId,
       createSeasonEpisodeDto,
       files,
     );
   }
 
-  // find an season episode by title
-  @Get('/search')
-  findByTitle(@Query('title') title: string) {
-    return this.seasonEpisodeService.findByTitle(title);
+  // find all episodes for a season of a series movie
+  @Get('/:seriesMovieId/seasons/:seasonId/episodes')
+  findAllSeasonEpisodes(
+    @Param('seriesMovieId') seriesMovieId: string,
+    @Param('seasonId') seasonId: string,
+  ) {
+    return this.seasonEpisodeService.findAllSeasonEpisodes(
+      +seasonId,
+      +seriesMovieId,
+    );
   }
 
   // find a season episode by id
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.seasonEpisodeService.findOne(+id);
+  @Get('/:seriesMovieId/seasons/:seasonId/episodes/:episodeId')
+  findOneEpisodeById(
+    @Param('seriesMovieId') seriesMovieId: string,
+    @Param('seasonId') seasonId: string,
+    @Param('episodeId') episodeId: string,
+  ) {
+    return this.seasonEpisodeService.findEpisodeById(
+      +seriesMovieId,
+      +seasonId,
+      +episodeId,
+    );
   }
 
   // update a season episode given its id
-  @Patch(':id')
+  @Patch('/:seriesMovieId/seasons/:seasonId/episodes/:episodeId')
   @UseInterceptors(AnyFilesInterceptor())
   update(
-    @Param('id') id: string,
+    @Param('seriesMovieId') seriesMovieId: string,
+    @Param('seasonId') seasonId: string,
+    @Param('episodeId') episodeId: string,
     @Body() updateSeasonEpisodeDto: UpdateSeasonEpisodeDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return this.seasonEpisodeService.update(+id, updateSeasonEpisodeDto, files);
+    return this.seasonEpisodeService.update(
+      +seriesMovieId,
+      +seasonId,
+      +episodeId,
+      updateSeasonEpisodeDto,
+      files,
+    );
   }
 
   // delete a season episode given its id
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.seasonEpisodeService.remove(+id);
+  @Delete('/:seriesMovieId/seasons/:seasonId/episodes/:episodeId')
+  removeSeasonEpisode(
+    @Param('seriesMovieId') seriesMovieId: string,
+    @Param('seasonId') seasonId: string,
+    @Param('episodeId') episodeId: string,
+  ) {
+    return this.seasonEpisodeService.remove(
+      +seriesMovieId,
+      +seasonId,
+      +episodeId,
+    );
   }
 }

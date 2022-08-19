@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { CreateSeasonEpisodeDto } from './dto/create-series-movie.dto';
 import { UpdateSeasonEpisodeDto } from './dto/update-series-movie.dto';
@@ -22,17 +23,23 @@ export class SeasonEpisodeService {
   ) {}
 
   /**
-   * Create a new season episode
+   * Create a new Episode for a Season(seasonId) of SeriesMovie(seriesMovieId)
+   * @param userId
+   * @param seasonId
+   * @param seriesMovieId
    * @param createSeasonEpisodeDto - new season episode
+   * @param files - episode files to be uploaded to s3
    * @returns {Promise<SeasonEpisode>} - created season episode
    */
   async create(
     userId: number,
     seasonId: number,
+    seriesMovieId: number,
     createSeasonEpisodeDto: CreateSeasonEpisodeDto,
     files: any[],
   ): Promise<SeasonEpisode> {
     //TODO: Authorization check - Admin or ContentCreator
+
     // check if user is an admin or a content creator - i.e allowed to upload movies
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -43,13 +50,33 @@ export class SeasonEpisodeService {
       );
     }
 
-    // check if season exists
-    const season = await this.prisma.seriesSeason.findUnique({
-      where: { id: seasonId },
-      select: { id: true },
+    // check if seriesMovieId exists and seasonId exists on the SeriesMovie
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: { seasons: { include: { episodes: true } } },
     });
+    if (!seriesMovie) {
+      throw new NotFoundException(
+        `SeriesMovie id #${seriesMovieId} does not exist`,
+      );
+    }
+    // check if seasonId exists on the seriesMovie
+    const season = seriesMovie.seasons.find((s) => s.id === seasonId);
     if (!season) {
-      throw new NotFoundException(`Season with id ${seasonId} not found`);
+      throw new NotFoundException(
+        `Season id #${seasonId} does not exist on SeriesMovie id #${seriesMovieId}`,
+      );
+    }
+
+    // check if current Season already has an Episode with episodeNumber
+    // episodeNumber is unique per season
+    const episode = season.episodes.find(
+      (e) => e.episodeNumber === createSeasonEpisodeDto.episodeNumber,
+    );
+    if (episode) {
+      throw new ConflictException(
+        `Episode ${createSeasonEpisodeDto.episodeNumber} already exists on Season ${season.seasonNumber}`,
+      );
     }
 
     // get episode files
@@ -90,19 +117,25 @@ export class SeasonEpisodeService {
       }
     } catch (e) {
       throw new InternalServerErrorException(
-        `Error saving Season Episode files: ${e.message}`,
+        `Error uploading SeasonEpisode files: ${e.message}`,
       );
     }
 
     // if any of the files was provided and uploaded successfully get the appropriate value
     // otherwise set to null
+
+    // poster
     const posterS3Url = posterUploadResult ? posterUploadResult.Location : null;
+
+    // trailer
     const trailerS3Url = trailerUploadResult
       ? trailerUploadResult.Location
       : null;
+
+    // video
     const videoS3Key = videoUploadResult ? videoUploadResult.Key : null;
 
-    // create and save the new season episode
+    // create and save the new episode
     const newSeasonEpisode = await this.prisma.seasonEpisode.create({
       data: {
         ...createSeasonEpisodeDto,
@@ -150,42 +183,81 @@ export class SeasonEpisodeService {
   }
 
   /**
-   * Find a SeasonEpisode by id
-   * @param id - SeasonEpisode id
-   * @returns {Promise<SeasonEpisode>} - SeasonEpisode
+   * Find all episodes for a given season
+   * @param seasonId
+   * @param seriesMovieId
+   * @returns {Promise<SeasonEpisode[]>} - all episodes for a season
    */
-  async findOne(id: number): Promise<SeasonEpisode> {
-    const seasonEpisode = await this.prisma.seasonEpisode.findUnique({
-      where: { id },
-      include: { seasonEpisodeFiles: true },
+  async findAllSeasonEpisodes(
+    seasonId: number,
+    seriesMovieId: number,
+  ): Promise<SeasonEpisode[]> {
+    // check if seriesMovieId exists and seasonId exists on the SeriesMovie
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: { seasons: { include: { episodes: true } } },
     });
-    if (!seasonEpisode) {
-      throw new NotFoundException(`Season Episode with id ${id} not found`);
-    }
-    return seasonEpisode;
-  }
-
-  /**
-   * Find SeasonEpisode by title
-   * @param title - SeasonEpisode title
-   * @returns {Promise<SeasonEpisode>} - SeasonEpisode
-   */
-  async findByTitle(title: string): Promise<SeasonEpisode[]> {
-    const seasonEpisode = await this.prisma.seasonEpisode.findMany({
-      where: { title: { contains: title } },
-    });
-    if (!seasonEpisode) {
+    if (!seriesMovie) {
       throw new NotFoundException(
-        `Season Episode with title ${title} does not exist`,
+        `SeriesMovie id #${seriesMovieId} does not exist`,
       );
     }
-    return seasonEpisode;
+    // check if seasonId exists on the seriesMovie
+    const season = seriesMovie.seasons.find((s) => s.id === seasonId);
+    if (!season) {
+      throw new NotFoundException(
+        `Season id #${seasonId} does not exist on SeriesMovie id #${seriesMovieId}`,
+      );
+    }
+    return season.episodes;
   }
 
   /**
-   * Update SeasonEpisode details
-   * @param id - SeasonEpisode id
-   * @param updateSeasonEpisodeDto - UpdateSeasonEpisodeDto
+   * Find a SeasonEpisode by episodId
+   * @param seriesMovieId
+   * @param seasonId
+   * @param episodeId
+   * @returns {Promise<SeasonEpisode>} - SeasonEpisode
+   */
+  async findEpisodeById(
+    seriesMovieId: number,
+    seasonId: number,
+    episodeId: number,
+  ): Promise<SeasonEpisode> {
+    // check if seriesMovieId exists and seasonId exists on the SeriesMovie
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: { seasons: { include: { episodes: true } } },
+    });
+    if (!seriesMovie) {
+      throw new NotFoundException(
+        `SeriesMovie id #${seriesMovieId} does not exist`,
+      );
+    }
+    // check if seasonId exists on the seriesMovie
+    const season = seriesMovie.seasons.find((s) => s.id === seasonId);
+    if (!season) {
+      throw new NotFoundException(
+        `Season id #${seasonId} does not exist on SeriesMovie id #${seriesMovieId}`,
+      );
+    }
+    // check if episodeId exists on the season
+    const episode = season.episodes.find((e) => e.id === episodeId);
+    if (!episode) {
+      throw new NotFoundException(
+        `Episode id #${episodeId} does not exist on Season id #${seasonId}`,
+      );
+    }
+    return episode;
+  }
+
+  /**
+   * Update a SeasonEpisode
+   * @param seriesMovieId
+   * @param seasonId
+   * @param episodeId
+   * @param updateSeasonEpisodeDto
+   * @param files - episode files to upload/update
    * @returns {Promise<SeasonEpisode>} - updated season episode
    *
    * For both :-
@@ -199,17 +271,40 @@ export class SeasonEpisodeService {
    * the movie files(poster, trailer, video) should be deleted from s3 before uploading any new one.
    */
   async update(
-    id: number,
+    seriesMovieId: number,
+    seasonId: number,
+    episodeId: number,
     updateSeasonEpisodeDto: UpdateSeasonEpisodeDto,
     files: any[],
   ): Promise<SeasonEpisode> {
-    const seasonEpisode = await this.prisma.seasonEpisode.findUnique({
-      where: { id },
-      include: { seasonEpisodeFiles: true },
+    // check if seriesMovieId exists and seasonId exists on the SeriesMovie
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: {
+        seasons: {
+          include: { episodes: { include: { seasonEpisodeFiles: true } } },
+        },
+      },
     });
-    if (!seasonEpisode) {
+    if (!seriesMovie) {
       throw new NotFoundException(
-        `Season Episode with id ${id} does not exist`,
+        `SeriesMovie id #${seriesMovieId} does not exist`,
+      );
+    }
+
+    // check if seasonId exists on the seriesMovie
+    const season = seriesMovie.seasons.find((s) => s.id === seasonId);
+    if (!season) {
+      throw new NotFoundException(
+        `Season id #${seasonId} does not exist on SeriesMovie id #${seriesMovieId}`,
+      );
+    }
+
+    // check if episodeId exists on the season
+    const episode = season.episodes.find((e) => e.id === episodeId);
+    if (!episode) {
+      throw new NotFoundException(
+        `Episode id #${episodeId} does not exist on Season id #${seasonId}`,
       );
     }
 
@@ -219,11 +314,11 @@ export class SeasonEpisodeService {
     let newPosterUploadResult: S3.ManagedUpload.SendData;
     if (poster) {
       // find the current poster key
-      const currentPoster = seasonEpisode.seasonEpisodeFiles.find(
+      const currentPoster = episode.seasonEpisodeFiles.find(
         (file) => file.fileType === MovieFileType.POSTER,
       );
       try {
-        // For movie update case
+        // For movie/episode update case
         // If exists delete current poster from db and s3.
         if (currentPoster) {
           await this.prisma.seasonEpisodeFiles.delete({
@@ -258,11 +353,11 @@ export class SeasonEpisodeService {
     const trailer = files.find((file) => file.fieldname === 'trailer');
     let newTrailerUploadResult: S3.ManagedUpload.SendData;
     if (trailer) {
-      const currentTrailer = seasonEpisode.seasonEpisodeFiles.find(
+      const currentTrailer = episode.seasonEpisodeFiles.find(
         (file) => file.fileType === MovieFileType.TRAILER,
       );
       try {
-        // For movie update case
+        // For movie/episode update case
         // If exists delete current trailer from db and s3
         if (currentTrailer) {
           await this.prisma.seasonEpisodeFiles.delete({
@@ -296,10 +391,10 @@ export class SeasonEpisodeService {
     const video = files.find((file) => file.fieldname === 'video');
     let newVideoUploadResult: S3.ManagedUpload.SendData;
     if (video) {
-      const currentVideoKey = seasonEpisode.videoKey;
+      const currentVideoKey = episode.videoKey;
       try {
-        // For movie update case
-        // If exists delete current video from s3
+        // For movie/episode update case
+        // If exists delete current video from db and s3
         if (currentVideoKey) {
           await this.prisma.seasonEpisodeFiles.delete({
             where: { fileKey: currentVideoKey },
@@ -330,11 +425,10 @@ export class SeasonEpisodeService {
     }
 
     const updatedSeasonEpisode = await this.prisma.seasonEpisode.update({
-      where: { id },
+      where: { id: episodeId },
       data: {
         ...updateSeasonEpisodeDto,
       },
-      include: { seasonEpisodeFiles: true },
     });
 
     // if the poster was uploaded save the s3 key to db
@@ -375,25 +469,53 @@ export class SeasonEpisodeService {
 
   /**
    * Delete a season episode
-   * @param id - season episode id
+   * @param seriesMovieId
+   * @param seasonId
+   * @param episodeId
    * @returns {Promise<any>}
    */
-  async remove(id: number): Promise<any> {
+  async remove(
+    seriesMovieId: number,
+    seasonId: number,
+    episodeId: number,
+  ): Promise<any> {
     // TODO: Restrict to only Admin & Content creator(ownerId)
     //  Only admin and movie owner(content creator) should be allowed to delete a series episode
-    const seasonEpisode = await this.prisma.seasonEpisode.findUnique({
-      where: { id },
-      include: { seasonEpisodeFiles: true },
+
+    // check if seriesMovieId exists
+    const seriesMovie = await this.prisma.seriesMovie.findUnique({
+      where: { id: seriesMovieId },
+      include: {
+        seasons: {
+          include: { episodes: { include: { seasonEpisodeFiles: true } } },
+        },
+      },
     });
-    if (!seasonEpisode) {
+    if (!seriesMovie) {
       throw new NotFoundException(
-        `Season Episode with id ${id} does not exist`,
+        `SeriesMovie id #${seriesMovieId} does not exist`,
+      );
+    }
+
+    // check if seasonId exists on seriesMovie
+    const season = seriesMovie.seasons.find((s) => s.id === seasonId);
+    if (!season) {
+      throw new NotFoundException(
+        `Season id #${seasonId} does not exist on SeriesMovie id #${seriesMovieId}`,
+      );
+    }
+
+    // check if episodeId exists on season
+    const episode = season.episodes.find((e) => e.id === episodeId);
+    if (!episode) {
+      throw new NotFoundException(
+        `Episode id #${episodeId} does not exist on SeriesSeason id #${seasonId}`,
       );
     }
 
     // get the public season episode files i.e poster and trailer
     // Exclude video, because it is not public
-    const publicSeasonEpisodeFiles = seasonEpisode.seasonEpisodeFiles.filter(
+    const publicSeasonEpisodeFiles = episode.seasonEpisodeFiles.filter(
       (file) => file.fileType !== MovieFileType.VIDEO,
     );
 
@@ -410,20 +532,23 @@ export class SeasonEpisodeService {
 
       // It's possible that the episode has no video file yet, hence need to check
       // delete the video file, a private file from s3
-      if (seasonEpisode.videoKey) {
-        await this.privateFileService.deleteMovieFile(seasonEpisode.videoKey);
+      if (episode.videoKey) {
+        await this.privateFileService.deleteMovieFile(episode.videoKey);
       }
     } catch (e) {
       throw new InternalServerErrorException(
-        `Error deleting series episode files from s3: ${e.message}`,
+        `Error deleting SeasonEpisode files from s3: ${e.message}`,
       );
     }
 
-    // delete series episode and all its associations from db - Cascade delete
+    // delete episode and all its associations from db - onDelete: CASCADE
     await this.prisma.seasonEpisode.delete({
-      where: { id },
+      where: { id: episodeId },
     });
 
-    return { statusCode: 200, message: `${seasonEpisode.title} deleted` };
+    return {
+      statusCode: 200,
+      message: `Episode ${episode.episodeNumber} of Season ${season.seasonNumber} deleted successfully`,
+    };
   }
 }
