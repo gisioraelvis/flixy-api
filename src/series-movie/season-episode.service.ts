@@ -25,16 +25,16 @@ export class SeasonEpisodeService {
   /**
    * Create a new Episode for a Season(seasonId) of SeriesMovie(seriesMovieId)
    * @param userId
-   * @param seasonId
    * @param seriesMovieId
+   * @param seasonId
    * @param createSeasonEpisodeDto - new season episode
    * @param files - episode files to be uploaded to s3
    * @returns {Promise<SeasonEpisode>} - created season episode
    */
   async create(
     userId: number,
-    seasonId: number,
     seriesMovieId: number,
+    seasonId: number,
     createSeasonEpisodeDto: CreateSeasonEpisodeDto,
     files: any[],
   ): Promise<SeasonEpisode> {
@@ -184,13 +184,13 @@ export class SeasonEpisodeService {
 
   /**
    * Find all episodes for a given season
-   * @param seasonId
    * @param seriesMovieId
+   * @param seasonId
    * @returns {Promise<SeasonEpisode[]>} - all episodes for a season
    */
   async findAllSeasonEpisodes(
-    seasonId: number,
     seriesMovieId: number,
+    seasonId: number,
   ): Promise<SeasonEpisode[]> {
     // check if seriesMovieId exists and seasonId exists on the SeriesMovie
     const seriesMovie = await this.prisma.seriesMovie.findUnique({
