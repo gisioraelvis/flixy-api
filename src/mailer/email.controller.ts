@@ -6,7 +6,7 @@ export class EmailController {
   constructor(private mailService: MailerService) {}
 
   @Get('test')
-  async plainTextEmail(@Query('toemail') toEmail: any) {
+  async plainTextEmail(@Query('toEmail') toEmail: any) {
     const response = await this.mailService.sendMail({
       to: toEmail,
       from: 'Flixy <no-reply@flixy.com>',

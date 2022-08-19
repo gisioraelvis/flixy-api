@@ -26,8 +26,8 @@ export class SingleMoviesOnDiskController {
     private readonly singleMoviesOnDiskService: SingleMoviesOnDiskService,
   ) {}
 
-  // create a new singleMovie
-  @Post('/create')
+  // create a new SingleMovie, stores files on disk
+  @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(AnyFilesInterceptor())
   create(

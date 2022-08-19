@@ -587,7 +587,7 @@ export class SingleMovieService {
 
     return {
       statusCode: 200,
-      message: `SingleMovie ${singleMovieId} deleted successfully`,
+      message: `SingleMovie id #${singleMovieId} deleted successfully`,
     };
   }
 }

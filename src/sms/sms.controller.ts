@@ -14,7 +14,7 @@ import { SmsDto } from './createSms.dto';
 export default class SmsController {
   constructor(private readonly smsService: SmsService) {}
 
-  @Post('send-sms')
+  @Post('send')
   @HttpCode(200)
   async sendSms(@Body() smsDto: SmsDto) {
     await this.smsService.sendMessage(

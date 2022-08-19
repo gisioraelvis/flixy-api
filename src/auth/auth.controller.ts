@@ -63,15 +63,16 @@ export class AuthController {
     return this.authService.signIn(req.user);
   }
 
+  // TODO: implement a proper User Profile endpoint
   // User profile
-  @Get('profile')
+  @Get('user-profile')
   @UseGuards(JwtAuthGuard)
   getProfile(@Req() req: RequestWithUser) {
     return req.user;
   }
 
-  // Reset password
-  @Post('forgot-password')
+  // request to send password reset link to user
+  @Post('request-password-reset')
   @HttpCode(200)
   forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto.email);
@@ -88,7 +89,7 @@ export class AuthController {
 
   // Phone number confirmation via sms
   // User must be signed in
-  @Get('initiate-phone-number-confirmation')
+  @Get('initiate-phoneNumber-confirmation')
   @UseGuards(JwtAuthGuard)
   async initiatePhoneNumberConfirmation(@Req() request: RequestWithUser) {
     if (request.user.isPhoneNumberConfirmed) {
@@ -99,7 +100,7 @@ export class AuthController {
 
   // confirm phone number
   // User must be signed in
-  @Post('confirm-phone-number')
+  @Post('confirm-phoneNumber')
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   async checkVerificationCode(
