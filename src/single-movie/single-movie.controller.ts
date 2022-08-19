@@ -25,7 +25,7 @@ export class SingleMovieController {
   constructor(private readonly singleMovieService: SingleMovieService) {}
 
   // create a new singleMovie
-  @Post('/create')
+  @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(AnyFilesInterceptor())
   create(

@@ -71,6 +71,8 @@ export class SingleMovieService {
     createSingleMovieDto: CreateSingleMovieDto,
     files: any[],
   ): Promise<any> {
+    // TODO: Authorization check - Admin/ContentCreator
+
     // get the contentCreatorId using the userId
     const contentCreator = await this.prisma.contentCreator.findUnique({
       where: { userId },
@@ -83,7 +85,7 @@ export class SingleMovieService {
     });
     if (!user.isContentCreator) {
       throw new UnauthorizedException(
-        `User with id ${userId} is not a content creator hence cannot upload movies`,
+        `User id #${userId} is not authorized to upload movies`,
       );
     }
 
@@ -123,8 +125,10 @@ export class SingleMovieService {
           video.buffer,
         );
       }
-    } catch (error) {
-      throw new InternalServerErrorException('Error saving single movie files');
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Error saving single movie files: ${e.message}`,
+      );
     }
 
     // parse genres from string to array
@@ -287,7 +291,7 @@ export class SingleMovieService {
       include: { genres: true, languages: true, singleMovieFiles: true },
     });
     if (!singleMovie) {
-      throw new NotFoundException(`SingleMovie with id ${id} does not exist`);
+      throw new NotFoundException(`SingleMovie id #${id} does not exist`);
     }
 
     const { genres, languages } = updateSingleMovieDto;
@@ -335,9 +339,9 @@ export class SingleMovieService {
 
           await this.publicFileService.deleteMovieFile(currentPoster.fileKey);
         }
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error deleting current poster from s3',
+          `Error deleting current poster from s3: ${e.message}`,
         );
       }
 
@@ -348,9 +352,9 @@ export class SingleMovieService {
           newPosterOriginalname,
           newPoster.buffer,
         );
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error uploading new poster to s3',
+          `Error uploading new poster to s3: ${e.message}`,
         );
       }
       updateSingleMovieDto.posterUrl = newPosterUploadResult.Location;
@@ -374,9 +378,9 @@ export class SingleMovieService {
 
           await this.publicFileService.deleteMovieFile(currentTrailer.fileKey);
         }
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error deleting current trailer from s3',
+          `Error deleting current trailer from s3: ${e.message}`,
         );
       }
       const newTrailer = files.find((file) => file.fieldname === 'trailer');
@@ -386,9 +390,9 @@ export class SingleMovieService {
           newTrailerOriginalname,
           newTrailer.buffer,
         );
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error uploading new trailer to s3',
+          `Error uploading new trailer to s3: ${e.message}`,
         );
       }
       updateSingleMovieDto.trailerUrl = newTrailerUploadResult.Location;
@@ -410,9 +414,9 @@ export class SingleMovieService {
 
           await this.privateFileService.deleteMovieFile(currentVideoKey);
         }
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error deleting current video from s3',
+          `Error deleting current video from s3: ${e.message}`,
         );
       }
 
@@ -424,9 +428,9 @@ export class SingleMovieService {
           newVideoOriginalname,
           newVideo.buffer,
         );
-      } catch (error) {
+      } catch (e) {
         throw new InternalServerErrorException(
-          'Error saving new video to disk',
+          `Error saving new video to disk: ${e.message}`,
         );
       }
       updateSingleMovieDto.videoKey = newVideoUploadResult.Key;
@@ -532,18 +536,20 @@ export class SingleMovieService {
 
   /**
    * Delete SingleMovie
-   * @param id - SingleMovie id
+   * @param singleMovieId - SingleMovie id
    * @returns {Promise<any>} - deleted SingleMovie title
    */
-  async remove(id: number): Promise<any> {
+  async remove(singleMovieId: number): Promise<any> {
     // TODO: Restrict to only Admin & Content creator(ownerId)
     //  Only admin and movie owner(content creator) should be allowed to delete a movie
     const singleMovie = await this.prisma.singleMovie.findUnique({
-      where: { id },
+      where: { id: singleMovieId },
       include: { singleMovieFiles: true },
     });
     if (!singleMovie) {
-      throw new NotFoundException(`Single Movie with id ${id} does not exist`);
+      throw new NotFoundException(
+        `SingleMovie id #${singleMovieId} does not exist`,
+      );
     }
 
     // get the public movie files i.e poster and trailer
@@ -568,17 +574,20 @@ export class SingleMovieService {
       if (singleMovie.videoKey) {
         await this.privateFileService.deleteMovieFile(singleMovie.videoKey);
       }
-    } catch (error) {
+    } catch (e) {
       throw new InternalServerErrorException(
-        `Error deleting single movie files from s3`,
+        `Error deleting single movie files from s3: ${e.message}`,
       );
     }
 
     // delete singleMovie and all its associations from db
     await this.prisma.singleMovie.delete({
-      where: { id },
+      where: { id: singleMovieId },
     });
 
-    return { statusCode: 200, message: `${singleMovie.title} deleted` };
+    return {
+      statusCode: 200,
+      message: `SingleMovie ${singleMovieId} deleted successfully`,
+    };
   }
 }
