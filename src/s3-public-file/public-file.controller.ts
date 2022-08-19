@@ -15,11 +15,11 @@ import { Express } from 'express';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import RequestWithUser from 'src/auth/requestWithUser.interface';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { PublicFilesService } from './public-files.service';
+import { PublicFileService } from './public-file.service';
 
 @Controller('public-files')
 export class PublicFilesController {
-  constructor(private readonly publicFilesService: PublicFilesService) {}
+  constructor(private readonly publicFileService: PublicFileService) {}
 
   @Post('upload')
   @UseGuards(JwtAuthGuard)
@@ -28,7 +28,7 @@ export class PublicFilesController {
     @Req() req: RequestWithUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.publicFilesService.uploadFile(
+    return this.publicFileService.uploadFile(
       req.user.id,
       file.originalname,
       file.buffer,
@@ -38,19 +38,19 @@ export class PublicFilesController {
   // findall
   @Get()
   async findAll(@Query() paginationQuery: PaginationQueryDto) {
-    return this.publicFilesService.findAll(paginationQuery);
+    return this.publicFileService.findAll(paginationQuery);
   }
 
   // findall
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.publicFilesService.findOne(+id);
+    return this.publicFileService.findOne(+id);
   }
 
   // delete
   @Delete('delete/:id')
   @UseGuards(JwtAuthGuard)
   async deleteFile(@Req() req: RequestWithUser, @Param('id') id: string) {
-    return this.publicFilesService.deleteFile(req.user.id, +id);
+    return this.publicFileService.deleteFile(req.user.id, +id);
   }
 }

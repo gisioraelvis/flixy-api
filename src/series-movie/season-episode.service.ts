@@ -9,8 +9,8 @@ import { UpdateSeasonEpisodeDto } from './dto/update-series-movie.dto';
 import { stripAndHyphenate } from 'src/utils/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MovieFileType, SeasonEpisode } from '@prisma/client';
-import { PrivateFileService } from 'src/s3-private-files/private-files.service';
-import { PublicFilesService } from 'src/s3-public-files/public-files.service';
+import { PrivateFileService } from 'src/s3-private-file/private-file.service';
+import { PublicFileService } from 'src/s3-public-file/public-file.service';
 import { S3 } from 'aws-sdk';
 
 @Injectable()
@@ -18,7 +18,7 @@ export class SeasonEpisodeService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly privateFileService: PrivateFileService,
-    private readonly publicFileService: PublicFilesService,
+    private readonly publicFileService: PublicFileService,
   ) {}
 
   /**

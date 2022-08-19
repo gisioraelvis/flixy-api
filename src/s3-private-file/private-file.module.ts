@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { PrivateFileService } from './private-files.service';
-import { PrivateFileController } from './private-files.controller';
+import { PrivateFileService } from './private-file.service';
+import { PrivateFileController } from './private-file.controller';
 import { AuthModule } from 'src/auth/auth.module';
 import { UserModule } from 'src/user/user.module';
 import { PrismaService } from 'src/prisma/prisma.service';

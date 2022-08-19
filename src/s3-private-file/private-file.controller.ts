@@ -16,7 +16,7 @@ import { Express, Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import RequestWithUser from 'src/auth/requestWithUser.interface';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
-import { PrivateFileService } from './private-files.service';
+import { PrivateFileService } from './private-file.service';
 
 @Controller('private-files')
 export class PrivateFileController {

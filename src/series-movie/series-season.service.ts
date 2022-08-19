@@ -3,21 +3,21 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   NotFoundException,
-  BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { CreateSeriesSeasonDto } from './dto/create-series-movie.dto';
 import { UpdateSeriesSeasonDto } from './dto/update-series-movie.dto';
 import { stripAndHyphenate } from 'src/utils/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MovieFileType, SeriesSeason } from '@prisma/client';
-import { PublicFilesService } from 'src/s3-public-files/public-files.service';
+import { PublicFileService } from 'src/s3-public-file/public-file.service';
 import { S3 } from 'aws-sdk';
 
 @Injectable()
 export class SeriesSeasonService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly publicFileService: PublicFilesService,
+    private readonly publicFileService: PublicFileService,
   ) {}
 
   /**
@@ -62,7 +62,7 @@ export class SeriesSeasonService {
       (season) => season.seasonNumber === createSeriesSeasonDto.seasonNumber,
     );
     if (seriesSeason) {
-      throw new BadRequestException(
+      throw new ConflictException(
         `Season ${createSeriesSeasonDto.seasonNumber} already exists on SeriesMovie id #${seriesMovieId}`,
       );
     }
