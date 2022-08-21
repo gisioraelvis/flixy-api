@@ -6,6 +6,7 @@ import {
   Param,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { StreamingService } from './streaming.service';
 import { Response } from 'express';

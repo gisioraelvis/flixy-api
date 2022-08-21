@@ -11,6 +11,7 @@ import {
   UploadedFiles,
   UseInterceptors,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { SingleMovieService } from './single-movie.service';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
@@ -54,25 +55,29 @@ export class SingleMovieController {
   }
 
   // find a singleMovie by id
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.singleMovieService.findOne(+id);
+  @Get(':singleMovieId')
+  findOne(@Param('singleMovieId', ParseIntPipe) singleMovieId: number) {
+    return this.singleMovieService.findOne(singleMovieId);
   }
 
   // update a singleMovie given its id
-  @Patch(':id')
+  @Patch(':singleMovieId')
   @UseInterceptors(AnyFilesInterceptor())
   update(
-    @Param('id') id: string,
+    @Param('singleMovieId', ParseIntPipe) singleMovieId: number,
     @Body() updateSingleMovieDto: UpdateSingleMovieDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
-    return this.singleMovieService.update(+id, updateSingleMovieDto, files);
+    return this.singleMovieService.update(
+      singleMovieId,
+      updateSingleMovieDto,
+      files,
+    );
   }
 
   // delete a singleMovie given its id
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.singleMovieService.remove(+id);
+  @Delete(':singleMovieId')
+  remove(@Param('singleMovieId', ParseIntPipe) singleMovieId: number) {
+    return this.singleMovieService.remove(singleMovieId);
   }
 }

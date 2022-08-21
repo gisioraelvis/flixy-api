@@ -10,6 +10,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express, Response } from 'express';
@@ -40,10 +41,10 @@ export class PrivateFileController {
   @UseGuards(JwtAuthGuard)
   async getPrivateFile(
     @Req() req: RequestWithUser,
-    @Param('id') fileId: string,
+    @Param('id', ParseIntPipe) fileId: number,
     @Res() res: Response,
   ) {
-    const file = await this.privateFileService.getFile(req.user.id, +fileId);
+    const file = await this.privateFileService.getFile(req.user.id, fileId);
     file.stream.pipe(res);
   }
 
@@ -61,7 +62,10 @@ export class PrivateFileController {
 
   @Delete('delete/:id')
   @UseGuards(JwtAuthGuard)
-  async deleteFile(@Req() req: RequestWithUser, @Param('id') id: string) {
-    return this.privateFileService.deleteFile(req.user.id, +id);
+  async deleteFile(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.privateFileService.deleteFile(req.user.id, id);
   }
 }

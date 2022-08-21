@@ -236,16 +236,18 @@ export class SingleMovieService {
 
   /**
    * Find a singleMovie by id
-   * @param id - singleMovie id
+   * @param singleMovieId
    * @returns {Promise<any>} - SingleMovie
    */
-  async findOne(id: number): Promise<any> {
+  async findOne(singleMovieId: number): Promise<any> {
     const singleMovie = await this.prisma.singleMovie.findUnique({
-      where: { id },
+      where: { id: singleMovieId },
       include: { genres: true, languages: true },
     });
     if (!singleMovie) {
-      throw new NotFoundException(`SingleMovie with id ${id} not found`);
+      throw new NotFoundException(
+        `SingleMovie with id ${singleMovieId} not found`,
+      );
     }
     return singleMovie;
   }
@@ -267,7 +269,7 @@ export class SingleMovieService {
 
   /**
    * Update singleMovie details
-   * @param id - singleMovie id
+   * @param singleMovieId
    * @param updateSingleMovieDto
    * @returns {Promise<any>} - updated singleMovie
    *
@@ -282,16 +284,18 @@ export class SingleMovieService {
    * the movie files(poster, trailer, video) should be deleted from s3 before uploading any new one.
    */
   async update(
-    id: number,
+    singleMovieId: number,
     updateSingleMovieDto: UpdateSingleMovieDto,
     files: any[],
   ): Promise<SingleMovie> {
     const singleMovie = await this.prisma.singleMovie.findUnique({
-      where: { id },
+      where: { id: singleMovieId },
       include: { genres: true, languages: true, singleMovieFiles: true },
     });
     if (!singleMovie) {
-      throw new NotFoundException(`SingleMovie id #${id} does not exist`);
+      throw new NotFoundException(
+        `SingleMovie id #${singleMovieId} does not exist`,
+      );
     }
 
     const { genres, languages } = updateSingleMovieDto;
@@ -448,7 +452,7 @@ export class SingleMovieService {
 
       if (genreIdsToRemove.length > 0) {
         await this.prisma.singleMovie.update({
-          where: { id },
+          where: { id: singleMovie.id },
           data: {
             genres: {
               disconnect: genreIdsToRemove.map((id) => ({ id })), // Transorms array of ids to array of objects with id property e.g [{ id: 1 },{ id: 3 }, { id: 2 }]
@@ -470,7 +474,7 @@ export class SingleMovieService {
 
       if (languageIdsToRemove.length > 0) {
         await this.prisma.singleMovie.update({
-          where: { id },
+          where: { id: singleMovie.id },
           data: {
             languages: {
               disconnect: languageIdsToRemove.map((id) => ({ id })),
@@ -481,7 +485,7 @@ export class SingleMovieService {
     }
 
     const updatedSingleMovie = await this.prisma.singleMovie.update({
-      where: { id },
+      where: { id: singleMovie.id },
       data: {
         ...updateSingleMovieDto,
         genres: {
@@ -536,7 +540,7 @@ export class SingleMovieService {
 
   /**
    * Delete SingleMovie
-   * @param singleMovieId - SingleMovie id
+   * @param singleMovieId
    * @returns {Promise<any>} - deleted SingleMovie title
    */
   async remove(singleMovieId: number): Promise<any> {

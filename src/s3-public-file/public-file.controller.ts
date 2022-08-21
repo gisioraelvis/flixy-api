@@ -9,6 +9,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
@@ -43,14 +44,17 @@ export class PublicFilesController {
 
   // findall
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.publicFileService.findOne(+id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.publicFileService.findOne(id);
   }
 
   // delete
   @Delete('delete/:id')
   @UseGuards(JwtAuthGuard)
-  async deleteFile(@Req() req: RequestWithUser, @Param('id') id: string) {
-    return this.publicFileService.deleteFile(req.user.id, +id);
+  async deleteFile(
+    @Req() req: RequestWithUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.publicFileService.deleteFile(req.user.id, id);
   }
 }

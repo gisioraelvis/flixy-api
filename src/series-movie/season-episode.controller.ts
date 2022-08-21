@@ -10,6 +10,7 @@ import {
   UploadedFiles,
   UseInterceptors,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CreateSeasonEpisodeDto } from './dto/create-series-movie.dto';
 import { UpdateSeasonEpisodeDto } from './dto/update-series-movie.dto';
@@ -28,16 +29,16 @@ export class SeasonEpisodeController {
   @UseInterceptors(AnyFilesInterceptor())
   createSeasonEpisode(
     @Req() req: RequestWithUser,
-    @Param('seriesMovieId') seriesMovieId: string,
-    @Param('seasonId') seasonId: string,
+    @Param('seriesMovieId', ParseIntPipe) seriesMovieId: number,
+    @Param('seasonId', ParseIntPipe) seasonId: number,
     @Body() createSeasonEpisodeDto: CreateSeasonEpisodeDto,
     @UploadedFiles()
     files: Array<Express.Multer.File>,
   ) {
     return this.seasonEpisodeService.create(
       req.user.id,
-      +seriesMovieId,
-      +seasonId,
+      seriesMovieId,
+      seasonId,
       createSeasonEpisodeDto,
       files,
     );
@@ -46,26 +47,26 @@ export class SeasonEpisodeController {
   // find all Season Episodes
   @Get('/:seriesMovieId/seasons/:seasonId/episodes')
   findAllSeasonEpisodes(
-    @Param('seriesMovieId') seriesMovieId: string,
-    @Param('seasonId') seasonId: string,
+    @Param('seriesMovieId', ParseIntPipe) seriesMovieId: number,
+    @Param('seasonId', ParseIntPipe) seasonId: number,
   ) {
     return this.seasonEpisodeService.findAllSeasonEpisodes(
-      +seriesMovieId,
-      +seasonId,
+      seriesMovieId,
+      seasonId,
     );
   }
 
   // find a SeasonEpisode by id
   @Get('/:seriesMovieId/seasons/:seasonId/episodes/:episodeId')
   findOneEpisodeById(
-    @Param('seriesMovieId') seriesMovieId: string,
-    @Param('seasonId') seasonId: string,
-    @Param('episodeId') episodeId: string,
+    @Param('seriesMovieId', ParseIntPipe) seriesMovieId: number,
+    @Param('seasonId', ParseIntPipe) seasonId: number,
+    @Param('episodeId', ParseIntPipe) episodeId: number,
   ) {
     return this.seasonEpisodeService.findEpisodeById(
-      +seriesMovieId,
-      +seasonId,
-      +episodeId,
+      seriesMovieId,
+      seasonId,
+      episodeId,
     );
   }
 
@@ -73,16 +74,16 @@ export class SeasonEpisodeController {
   @Patch('/:seriesMovieId/seasons/:seasonId/episodes/:episodeId')
   @UseInterceptors(AnyFilesInterceptor())
   update(
-    @Param('seriesMovieId') seriesMovieId: string,
-    @Param('seasonId') seasonId: string,
-    @Param('episodeId') episodeId: string,
+    @Param('seriesMovieId', ParseIntPipe) seriesMovieId: number,
+    @Param('seasonId', ParseIntPipe) seasonId: number,
+    @Param('episodeId', ParseIntPipe) episodeId: number,
     @Body() updateSeasonEpisodeDto: UpdateSeasonEpisodeDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     return this.seasonEpisodeService.update(
-      +seriesMovieId,
-      +seasonId,
-      +episodeId,
+      seriesMovieId,
+      seasonId,
+      episodeId,
       updateSeasonEpisodeDto,
       files,
     );
@@ -91,14 +92,10 @@ export class SeasonEpisodeController {
   // delete a SeasonEpisode given its id
   @Delete('/:seriesMovieId/seasons/:seasonId/episodes/:episodeId')
   removeSeasonEpisode(
-    @Param('seriesMovieId') seriesMovieId: string,
-    @Param('seasonId') seasonId: string,
-    @Param('episodeId') episodeId: string,
+    @Param('seriesMovieId', ParseIntPipe) seriesMovieId: number,
+    @Param('seasonId', ParseIntPipe) seasonId: number,
+    @Param('episodeId', ParseIntPipe) episodeId: number,
   ) {
-    return this.seasonEpisodeService.remove(
-      +seriesMovieId,
-      +seasonId,
-      +episodeId,
-    );
+    return this.seasonEpisodeService.remove(seriesMovieId, seasonId, episodeId);
   }
 }

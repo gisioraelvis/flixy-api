@@ -11,6 +11,7 @@ import {
   UploadedFiles,
   UseInterceptors,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { SingleMoviesOnDiskService } from './single-movie-on-disk.service';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
@@ -57,20 +58,20 @@ export class SingleMoviesOnDiskController {
 
   // find a singleMovie by id
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.singleMoviesOnDiskService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.singleMoviesOnDiskService.findOne(id);
   }
 
   // update a singleMovie given its id
   @Patch(':id')
   @UseInterceptors(AnyFilesInterceptor())
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateSingleMovieDto: UpdateSingleMovieDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     return this.singleMoviesOnDiskService.update(
-      +id,
+      id,
       updateSingleMovieDto,
       files,
     );
@@ -78,7 +79,7 @@ export class SingleMoviesOnDiskController {
 
   // delete a singleMovie given its id
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.singleMoviesOnDiskService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.singleMoviesOnDiskService.remove(id);
   }
 }
