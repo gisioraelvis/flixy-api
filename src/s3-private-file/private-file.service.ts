@@ -4,7 +4,8 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { S3 } from 'aws-sdk';
+import { AWSError, S3 } from 'aws-sdk';
+import { Request } from 'aws-sdk/lib/request';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuid } from 'uuid';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -82,6 +83,12 @@ export class PrivateFileService {
    * Fetches a movie file from s3,
    * @param fileKey
    * @returns {Promise<any>} - the file stream
+   *
+   * // TODO: Keep track of issue until fixed
+   * @issue crashes when AWS-SDK throws any type of Error
+   *     - Incorrect key when searching for an object
+   *     - Incorrect credentials
+   * @see https://github.com/aws/aws-sdk-js/issues/4123
    */
   async getMovieFile(fileKey: string): Promise<any> {
     const s3 = new S3();
@@ -92,6 +99,7 @@ export class PrivateFileService {
           Key: fileKey,
         })
         .createReadStream();
+
       return fileStream;
     } catch (e) {
       throw new InternalServerErrorException(

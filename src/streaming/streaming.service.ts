@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  StreamableFile,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { statSync, createReadStream } from 'fs';
 import { join } from 'path';
@@ -16,10 +20,11 @@ export class StreamingService {
    * @param res - The response object
    */
   async s3FileStream(fileKey: string, req: RequestWithUser, res: Response) {
-    const fileStream = await this.privateFileService.getMovieFile(fileKey);
-
-    console.log(req.user);
     try {
+      const fileStream = await this.privateFileService.getMovieFile(fileKey);
+
+      //console.log(req.user);
+
       fileStream.pipe(res);
     } catch (e) {
       throw new InternalServerErrorException(e.message);
@@ -69,7 +74,8 @@ export class StreamingService {
           'Content-Type': 'video/mp4',
         };
         res.writeHead(200, head);
-        createReadStream(filePath).pipe(res);
+        const fileStream = createReadStream(filePath);
+        return new StreamableFile(fileStream);
       }
     } catch (e) {
       throw new InternalServerErrorException(
