@@ -9,10 +9,16 @@ import { PrivateFileService } from 'src/s3-private-file/private-file.service';
 import { PublicFileService } from 'src/s3-public-file/public-file.service';
 import { SeriesSeasonService } from './series-season.service';
 import { SeasonEpisodeService } from './season-episode.service';
+import { SeriesSeasonController } from './series-season.controller';
+import { SeasonEpisodeController } from './season-episode.controller';
 
 @Module({
   imports: [CommonModule, PublicFileModule, PrivateFileModule],
-  controllers: [SeriesMovieController],
+  controllers: [
+    SeriesMovieController,
+    SeriesSeasonController,
+    SeasonEpisodeController,
+  ],
   providers: [
     PrismaService,
     PrivateFileService,
