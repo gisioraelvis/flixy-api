@@ -18,8 +18,10 @@ import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import RequestWithUser from 'src/authentication/requestWithUser.interface';
-import { JwtAuthGuard } from 'src/authentication/guards/jwt-auth.guard';
+import RequestWithUser from 'src/auth/requestWithUser.interface';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Role } from '@prisma/client';
 
 @Controller('single-movies')
 export class SingleMovieController {
@@ -27,6 +29,7 @@ export class SingleMovieController {
 
   // create a new singleMovie
   @Post()
+  @UseGuards(RolesGuard(Role.ADMIN, Role.CONTENTCREATOR))
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(AnyFilesInterceptor())
   create(

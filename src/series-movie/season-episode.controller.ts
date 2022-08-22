@@ -15,8 +15,8 @@ import {
 import { CreateSeasonEpisodeDto } from './dto/create-series-movie.dto';
 import { UpdateSeasonEpisodeDto } from './dto/update-series-movie.dto';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import RequestWithUser from 'src/authentication/requestWithUser.interface';
-import { JwtAuthGuard } from 'src/authentication/guards/jwt-auth.guard';
+import RequestWithUser from 'src/auth/requestWithUser.interface';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { SeasonEpisodeService } from './season-episode.service';
 
 @Controller('series-movies')

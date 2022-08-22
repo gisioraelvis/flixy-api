@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UsersController } from './user.controller';
 import { CommonModule } from 'src/common/common.module';
-import { PasswordService } from 'src/authentication/passwordHashing.service';
+import { PasswordService } from 'src/auth/passwordHashing.service';
 
 @Module({
   imports: [CommonModule],

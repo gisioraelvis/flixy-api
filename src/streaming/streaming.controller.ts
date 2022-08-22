@@ -9,8 +9,8 @@ import {
 } from '@nestjs/common';
 import { StreamingService } from './streaming.service';
 import { Response } from 'express';
-import { JwtAuthGuard } from 'src/authentication/guards/jwt-auth.guard';
-import RequestWithUser from 'src/authentication/requestWithUser.interface';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import RequestWithUser from 'src/auth/requestWithUser.interface';
 import { CreateOnDiskStreamDto } from './dto/create-streaming.dto';
 
 @Controller('video-stream')

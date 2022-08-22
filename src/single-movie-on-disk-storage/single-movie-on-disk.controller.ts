@@ -18,8 +18,8 @@ import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
-import RequestWithUser from 'src/authentication/requestWithUser.interface';
-import { JwtAuthGuard } from 'src/authentication/guards/jwt-auth.guard';
+import RequestWithUser from 'src/auth/requestWithUser.interface';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('single-movies-on-disk')
 export class SingleMoviesOnDiskController {

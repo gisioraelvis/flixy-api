@@ -35,4 +35,4 @@ import { PasswordService } from './passwordHashing.service';
     PasswordService,
   ],
 })
-export class AuthenticationModule {}
+export class AuthModule {}

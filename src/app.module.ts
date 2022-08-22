@@ -1,6 +1,6 @@
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AuthenticationModule } from './authentication/authentication.module';
+import { AuthModule } from './auth/authentication.module';
 import { CommonModule } from './common/common.module';
 import { UserModule } from './user/user.module';
 import { LoggerModule } from './logger/logger.module';
@@ -62,7 +62,7 @@ import { SeriesMovieModule } from './series-movie/series-movie.module';
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
     }),
-    AuthenticationModule,
+    AuthModule,
     CommonModule,
     UserModule,
     LoggerModule,

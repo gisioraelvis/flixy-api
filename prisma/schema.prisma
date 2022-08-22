@@ -13,6 +13,12 @@ enum UserStatus {
   INACTIVE
 }
 
+enum Role {
+  ADMIN
+  CONTENTCREATOR
+  USER
+}
+
 model User {
   id                        Int                           @id @default(autoincrement())
   email                     String                        @unique
@@ -24,6 +30,7 @@ model User {
   isAdmin                   Boolean                       @default(false)
   isContentCreator          Boolean                       @default(false)
   contentCreator            ContentCreator?
+  roles                     Role[]                        @default([USER])
   watchLaters               UserMovieWatchLater[]
   premieringMoviesPurchases UserPremieringMoviePurchase[]
   subscriptionPackage       UserSubscriptionPackage?
