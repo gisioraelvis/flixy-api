@@ -13,8 +13,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import RequestWithUser from 'src/auth/requestWithUser.interface';
+import { JwtAuthGuard } from 'src/authentication/guards/jwt-auth.guard';
+import RequestWithUser from 'src/authentication/requestWithUser.interface';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { PublicFileService } from './public-file.service';
 

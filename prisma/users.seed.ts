@@ -1,4 +1,4 @@
-import { PasswordService } from '../src/auth/passwordHashing.service';
+import { PasswordService } from '../src/authentication/passwordHashing.service';
 import { faker } from '@faker-js/faker';
 
 const hashPassword = new PasswordService().hashPassword;

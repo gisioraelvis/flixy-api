@@ -6,7 +6,7 @@ import {
 import { Response } from 'express';
 import { statSync, createReadStream } from 'fs';
 import { join } from 'path';
-import RequestWithUser from 'src/auth/requestWithUser.interface';
+import RequestWithUser from 'src/authentication/requestWithUser.interface';
 import { PrivateFileService } from 'src/s3-private-file/private-file.service';
 
 @Injectable()

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+import { AuthenticationService } from './authentication.service';
+import { AuthenticationController } from './authentication.controller';
 import { UserModule } from 'src/user/user.module';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './strategies/local.strategy';
@@ -24,9 +24,9 @@ import { PasswordService } from './passwordHashing.service';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthenticationController],
   providers: [
-    AuthService,
+    AuthenticationService,
     LocalStrategy,
     JwtStrategy,
     EmailConfirmationService,
@@ -35,4 +35,4 @@ import { PasswordService } from './passwordHashing.service';
     PasswordService,
   ],
 })
-export class AuthModule {}
+export class AuthenticationModule {}

@@ -10,13 +10,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { SmsVerificationCodeDto } from 'src/sms/createSms.dto';
-import { AuthService } from './auth.service';
+import { AuthenticationService } from './authentication.service';
 import {
   EmailConfirmationDto,
   ForgotPasswordDto,
   ResetPasswordDto,
   SignUpDto,
-} from './dto/create-auth.dto';
+} from './dto/create-authentication.dto';
 import { EmailConfirmationService } from './emailConfirmation.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -24,9 +24,9 @@ import RequestWithUser from './requestWithUser.interface';
 import SmsService from './phoneNumberConfirmation.service';
 
 @Controller()
-export class AuthController {
+export class AuthenticationController {
   constructor(
-    private readonly authService: AuthService,
+    private readonly authenticationService: AuthenticationService,
     private readonly emailConfirmationService: EmailConfirmationService,
     private readonly smsService: SmsService,
   ) {}
@@ -34,7 +34,7 @@ export class AuthController {
   // New user registration
   @Post('signup')
   signUp(@Body() signUpDto: SignUpDto) {
-    return this.authService.signUp(signUpDto);
+    return this.authenticationService.signUp(signUpDto);
   }
 
   // Receives token from email confirmation link
@@ -60,7 +60,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @HttpCode(200)
   signIn(@Req() req: RequestWithUser) {
-    return this.authService.signIn(req.user);
+    return this.authenticationService.signIn(req.user);
   }
 
   // TODO: implement a proper User Profile endpoint
@@ -75,7 +75,7 @@ export class AuthController {
   @Post('request-password-reset')
   @HttpCode(200)
   forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-    return this.authService.forgotPassword(forgotPasswordDto.email);
+    return this.authenticationService.forgotPassword(forgotPasswordDto.email);
   }
 
   // Reset password
@@ -84,7 +84,10 @@ export class AuthController {
     @Query('token') token: string,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
-    return this.authService.resetPassword(token, resetPasswordDto.newpassword);
+    return this.authenticationService.resetPassword(
+      token,
+      resetPasswordDto.newpassword,
+    );
   }
 
   // Phone number confirmation via sms

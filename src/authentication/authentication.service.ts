@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { SignUpDto } from './dto/create-auth.dto';
+import { SignUpDto } from './dto/create-authentication.dto';
 import { EmailConfirmationService } from './emailConfirmation.service';
 import { EmailPasswordResetService } from './emailPasswordReset.service';
 import { User } from '@prisma/client';
@@ -8,7 +8,7 @@ import { PasswordService } from './passwordHashing.service';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
-export class AuthService {
+export class AuthenticationService {
   //inject UserService
   constructor(
     private readonly userService: UserService,
