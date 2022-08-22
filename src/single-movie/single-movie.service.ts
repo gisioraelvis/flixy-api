@@ -245,9 +245,7 @@ export class SingleMovieService {
       include: { genres: true, languages: true },
     });
     if (!singleMovie) {
-      throw new NotFoundException(
-        `SingleMovie with id ${singleMovieId} not found`,
-      );
+      throw new NotFoundException(`SingleMovie id #${singleMovieId} not found`);
     }
     return singleMovie;
   }

@@ -116,7 +116,7 @@ export class PublicFileService {
     });
 
     if (!file) {
-      throw new NotFoundException(`File with id ${id} does not exist`);
+      throw new NotFoundException(`File id #${id} does not exist`);
     }
 
     return file;
@@ -164,7 +164,7 @@ export class PublicFileService {
 
     if (!file) {
       throw new NotFoundException(
-        `File with id ${fileId} owned by user id ${ownerId} does not exist`,
+        `File id #${fileId} owned by user id #${ownerId} does not exist`,
       );
     }
     const s3 = new S3();
@@ -187,7 +187,7 @@ export class PublicFileService {
 
     return {
       statusCode: 200,
-      message: `File with id ${fileId} deleted successfully`,
+      message: `File id #${fileId} deleted successfully`,
     };
   }
 }

@@ -41,9 +41,8 @@ export class PrivateFileService {
   }
 
   /**
-   * Uploads a file to S3, returns the file's key and
-   * saves the file's key and ownerId to the db
-   * @param ownerId - id of the user who is uploading the file
+   * Uploads a file to S3 then saves the file's key and ownerId to the db
+   * @param ownerId - the user id
    * @param filename
    * @param dataBuffer - the file being uploaded
    * @returns {Promise<PrivateFie>} - the file metadata saved to the db
@@ -120,7 +119,7 @@ export class PrivateFileService {
     });
 
     if (!fileInfo) {
-      throw new NotFoundException(`File with id ${fileId} does not exist`);
+      throw new NotFoundException(`File id #${fileId} does not exist`);
     }
 
     // check if user owns the file
@@ -248,7 +247,7 @@ export class PrivateFileService {
 
     if (!file) {
       throw new NotFoundException(
-        `File with id ${fileId} does not exist or is not owned by user id ${ownerId}`,
+        `File id #${fileId} does not exist or is not owned by user id #${ownerId}`,
       );
     }
 
@@ -267,7 +266,7 @@ export class PrivateFileService {
 
       return {
         statusCode: 200,
-        message: `File with id ${fileId} deleted successfully`,
+        message: `File id #${fileId} deleted successfully`,
       };
     } catch (e) {
       throw new InternalServerErrorException(

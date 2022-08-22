@@ -82,7 +82,7 @@ export class SingleMoviesOnDiskService {
     });
     if (!user.isContentCreator) {
       throw new UnauthorizedException(
-        `User with id ${userId} is not a content creator hence cannot upload movies`,
+        `User id #${userId} is not a content creator hence cannot upload movies`,
       );
     }
 
@@ -225,7 +225,7 @@ export class SingleMoviesOnDiskService {
       include: { genres: true, languages: true },
     });
     if (!singleMovie) {
-      throw new NotFoundException(`SingleMovie with id ${id} not found`);
+      throw new NotFoundException(`SingleMovie id #${id} not found`);
     }
     return singleMovie;
   }
@@ -262,7 +262,7 @@ export class SingleMoviesOnDiskService {
       include: { genres: true, languages: true },
     });
     if (!singleMovie) {
-      throw new NotFoundException(`SingleMovie with id ${id} does not exist`);
+      throw new NotFoundException(`SingleMovie id #${id} does not exist`);
     }
 
     // Even if the movie title is changed, retain the old folder name
@@ -442,7 +442,7 @@ export class SingleMoviesOnDiskService {
       where: { id },
     });
     if (!singleMovie) {
-      throw new NotFoundException(`Single Movie with id ${id} does not exist`);
+      throw new NotFoundException(`Single Movie id #${id} does not exist`);
     }
 
     const singleMoviesFolder = singleMovie.filesFolder;

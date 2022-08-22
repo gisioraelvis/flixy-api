@@ -41,7 +41,7 @@ export class SeriesSeasonService {
     });
     if (!user.isContentCreator) {
       throw new UnauthorizedException(
-        `User with id #${userId} is not authorized to upload movies`,
+        `User id #${userId} is not authorized to upload movies`,
       );
     }
 
@@ -52,7 +52,7 @@ export class SeriesSeasonService {
     });
     if (!seriesMovie) {
       throw new NotFoundException(
-        `SeriesMovie with id #${seriesMovieId} does not exist`,
+        `SeriesMovie id #${seriesMovieId} does not exist`,
       );
     }
 
@@ -158,7 +158,7 @@ export class SeriesSeasonService {
     });
     if (!seriesMovie) {
       throw new NotFoundException(
-        `SeriesMovie with id #${seriesMovieId} does not exist`,
+        `SeriesMovie id #${seriesMovieId} does not exist`,
       );
     }
 
@@ -168,7 +168,7 @@ export class SeriesSeasonService {
     );
     if (!seriesSeason) {
       throw new NotFoundException(
-        `SeriesSeason with id #${seasonId} does not exist on SeriesMovie with id #${seriesMovieId}`,
+        `SeriesSeason id #${seasonId} does not exist on SeriesMovie id #${seriesMovieId}`,
       );
     }
 

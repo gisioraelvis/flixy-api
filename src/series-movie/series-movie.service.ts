@@ -221,7 +221,7 @@ export class SeriesMovieService {
       include: { genres: true, languages: true, seasons: true },
     });
     if (!seriesMovie) {
-      throw new NotFoundException(`SeriesMovie with id #${id} does not exist`);
+      throw new NotFoundException(`SeriesMovie id #${id} does not exist`);
     }
     return seriesMovie;
   }
@@ -269,7 +269,7 @@ export class SeriesMovieService {
       include: { genres: true, languages: true, seriesMovieFiles: true },
     });
     if (!seriesMovie) {
-      throw new NotFoundException(`SeriesMovie with id #${id} does not exist`);
+      throw new NotFoundException(`SeriesMovie id #${id} does not exist`);
     }
 
     const { genres, languages } = updateSeriesMovieDto;
