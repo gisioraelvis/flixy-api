@@ -26,7 +26,7 @@ export class PrivateFileController {
   @Post('upload')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
-  async addPrivateFile(
+  async uploadPrivateUserFile(
     @Req() req: RequestWithUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
@@ -37,11 +37,11 @@ export class PrivateFileController {
     );
   }
 
-  @Get(':id')
+  @Get(':fileId')
   @UseGuards(JwtAuthGuard)
-  async getPrivateFile(
+  async getPrivateUserFile(
     @Req() req: RequestWithUser,
-    @Param('id', ParseIntPipe) fileId: number,
+    @Param('fileId', ParseIntPipe) fileId: number,
     @Res() res: Response,
   ) {
     const file = await this.privateFileService.getFile(req.user.id, fileId);
@@ -50,7 +50,7 @@ export class PrivateFileController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getAllPrivateFiles(
+  async getAllPrivateUserFiles(
     @Req() request: RequestWithUser,
     @Query() paginationQuery: PaginationQueryDto,
   ) {
@@ -60,12 +60,12 @@ export class PrivateFileController {
     );
   }
 
-  @Delete('delete/:id')
+  @Delete('delete/:fileId')
   @UseGuards(JwtAuthGuard)
-  async deleteFile(
+  async deletePrivateUserFile(
     @Req() req: RequestWithUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('fileId', ParseIntPipe) fileId: number,
   ) {
-    return this.privateFileService.deleteFile(req.user.id, id);
+    return this.privateFileService.deleteFile(req.user.id, fileId);
   }
 }

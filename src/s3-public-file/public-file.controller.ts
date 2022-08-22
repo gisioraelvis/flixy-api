@@ -25,7 +25,7 @@ export class PublicFilesController {
   @Post('upload')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
-  async addAvatar(
+  async uploadPublicUserFile(
     @Req() req: RequestWithUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
@@ -36,25 +36,22 @@ export class PublicFilesController {
     );
   }
 
-  // findall
   @Get()
-  async findAll(@Query() paginationQuery: PaginationQueryDto) {
+  async getAllPublicUserFiles(@Query() paginationQuery: PaginationQueryDto) {
     return this.publicFileService.findAll(paginationQuery);
   }
 
-  // findall
-  @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.publicFileService.findOne(id);
+  @Get(':fileId')
+  async getPublicUserFileById(@Param('fileId', ParseIntPipe) fileId: number) {
+    return this.publicFileService.findOne(fileId);
   }
 
-  // delete
-  @Delete('delete/:id')
+  @Delete('delete/:fileId')
   @UseGuards(JwtAuthGuard)
-  async deleteFile(
+  async deletePublicUserFile(
     @Req() req: RequestWithUser,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('fileId', ParseIntPipe) fileId: number,
   ) {
-    return this.publicFileService.deleteFile(req.user.id, id);
+    return this.publicFileService.deleteFile(req.user.id, fileId);
   }
 }
