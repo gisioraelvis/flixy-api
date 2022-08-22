@@ -6,7 +6,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 /**
  * Guard that checks if the user has the correct role to access the route.
  * @param setRoles - The role that the user must have to access the route.
- * @returns Bool - true if the user has the correct role, false otherwise.
+ * @returns boolean - true if the user has the correct role, false otherwise and hence
  * @throws UnauthorizedException if the user does not have the correct role.
  *
  * @see https://wanago.io/2021/11/15/api-nestjs-authorization-roles-claims/
