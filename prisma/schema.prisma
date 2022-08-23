@@ -96,7 +96,7 @@ model SingleMovie {
   description             String
   duration                String
   posterUrl               String?
-  trailerUrl              String?
+  trailerKey              String?
   videoKey                String?
   filesFolder             String?
   singleMovieFiles        SingleMovieFiles[]
@@ -135,7 +135,7 @@ model SeriesMovie {
   title            String
   description      String
   posterUrl        String?
-  trailerUrl       String?
+  trailerKey       String?
   filesFolder      String?
   seriesMovieFiles SeriesMovieFiles[]
   isReleased       Boolean               @default(false)
@@ -169,7 +169,7 @@ model SeriesSeason {
   title                   String
   description             String
   posterUrl               String?
-  trailerUrl              String?
+  trailerKey              String?
   filesFolder             String?
   seriesSeasonFiles       SeriesSeasonFiles[]
   isPremiering            Boolean                       @default(false)
@@ -200,7 +200,6 @@ model SeasonEpisode {
   description        String
   duration           String
   posterUrl          String?
-  trailerUrl         String?
   videoKey           String?
   filesFolder        String?
   seasonEpisodeFiles SeasonEpisodeFiles[]

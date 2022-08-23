@@ -78,7 +78,7 @@ export class PrivateFileService {
   }
 
   /**
-   * Fetches a movie file from s3,
+   * Fetches a movie file from s3 as a stream
    * @param fileKey
    * @returns {Promise<any>} - the file stream
    *

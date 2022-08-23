@@ -141,9 +141,7 @@ export class SeriesMovieService {
     // otherwise set to undefined
     const posterS3Url = posterUploadResult ? posterUploadResult.Location : null;
 
-    const trailerS3Url = trailerUploadResult
-      ? trailerUploadResult.Location
-      : null;
+    const trailerS3Key = trailerUploadResult ? trailerUploadResult.Key : null;
 
     // create and save the new movie
     const newSeriesMovie = await this.prisma.seriesMovie.create({
@@ -154,7 +152,7 @@ export class SeriesMovieService {
           connect: languagesArrayObj.map((lang) => ({ id: lang.id })),
         },
         posterUrl: posterS3Url,
-        trailerUrl: trailerS3Url,
+        trailerKey: trailerS3Key,
         contentCreator: { connect: { id: contentCreator.id } },
       },
       include: { genres: true, languages: true },
@@ -373,7 +371,7 @@ export class SeriesMovieService {
           `Error uploading new trailer to s3: ${e.message}`,
         );
       }
-      updateSeriesMovieDto.trailerUrl = newTrailerUploadResult.Location;
+      updateSeriesMovieDto.trailerKey = newTrailerUploadResult.Key;
     }
 
     // get the current movie genres

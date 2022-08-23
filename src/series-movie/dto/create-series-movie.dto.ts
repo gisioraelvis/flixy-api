@@ -19,7 +19,7 @@ export class CreateSeriesMovieDto {
   isPremiering: boolean;
 
   posterUrl: string;
-  trailerUrl: string;
+  trailerKey: string;
   filesFolder: string;
 }
 
@@ -42,7 +42,7 @@ export class CreateSeriesSeasonDto {
   price: string;
 
   posterUrl: string;
-  trailerUrl: string;
+  trailerKey: string;
   filesFolder: string;
 }
 
@@ -62,6 +62,5 @@ export class CreateSeasonEpisodeDto {
   duration: string;
 
   posterUrl: string;
-  trailerUrl: string;
   videoKey: string;
 }

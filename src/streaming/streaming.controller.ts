@@ -17,15 +17,26 @@ import { CreateOnDiskStreamDto } from './dto/create-streaming.dto';
 export class StreamingController {
   constructor(private readonly streamingService: StreamingService) {}
 
-  // gets a file stream stored on s3
-  @Get('s3/:videoKey')
+  // streams movie trailer video file from S3
+  @Get('s3/trailer/:trailerKey')
   @UseGuards(JwtAuthGuard)
-  async streamS3PrivateFile(
+  async streamS3MovieTrailer(
+    @Req() req: RequestWithUser,
+    @Param('trailerKey') trailerKey: string,
+    @Res() res: Response,
+  ) {
+    return this.streamingService.s3TrailerStream(trailerKey, req, res);
+  }
+
+  // streams movie video file from s3
+  @Get('s3/video/:videoKey')
+  @UseGuards(JwtAuthGuard)
+  async streamS3MovieVideo(
     @Req() req: RequestWithUser,
     @Param('videoKey') videoKey: string,
     @Res() res: Response,
   ) {
-    return this.streamingService.s3FileStream(videoKey, req, res);
+    return this.streamingService.s3VideoStream(videoKey, req, res);
   }
 
   // gets a file stream stored on the local disk

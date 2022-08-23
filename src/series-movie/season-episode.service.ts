@@ -81,12 +81,10 @@ export class SeasonEpisodeService {
 
     // get episode files
     const poster = files.find((file) => file.fieldname === 'poster');
-    const trailer = files.find((file) => file.fieldname === 'trailer');
     const video = files.find((file) => file.fieldname === 'video');
 
     // episode files urls
     let posterUploadResult: S3.ManagedUpload.SendData,
-      trailerUploadResult: S3.ManagedUpload.SendData,
       videoUploadResult: S3.ManagedUpload.SendData;
     try {
       // poster is provided
@@ -95,15 +93,6 @@ export class SeasonEpisodeService {
         posterUploadResult = await this.publicFileService.uploadMovieFile(
           posterOriginalname,
           poster.buffer,
-        );
-      }
-
-      // trailer is provided
-      if (trailer) {
-        const trailerOriginalname = stripAndHyphenate(trailer.originalname);
-        trailerUploadResult = await this.publicFileService.uploadMovieFile(
-          trailerOriginalname,
-          trailer.buffer,
         );
       }
 
@@ -127,11 +116,6 @@ export class SeasonEpisodeService {
     // poster
     const posterS3Url = posterUploadResult ? posterUploadResult.Location : null;
 
-    // trailer
-    const trailerS3Url = trailerUploadResult
-      ? trailerUploadResult.Location
-      : null;
-
     // video
     const videoS3Key = videoUploadResult ? videoUploadResult.Key : null;
 
@@ -140,7 +124,6 @@ export class SeasonEpisodeService {
       data: {
         ...createSeasonEpisodeDto,
         posterUrl: posterS3Url,
-        trailerUrl: trailerS3Url,
         videoKey: videoS3Key,
         season: { connect: { id: season.id } },
       },
@@ -152,17 +135,6 @@ export class SeasonEpisodeService {
         data: {
           fileKey: posterUploadResult.Key,
           fileType: MovieFileType.POSTER,
-          seasonEpisode: { connect: { id: newSeasonEpisode.id } },
-        },
-      });
-    }
-
-    // if the trailer was uploaded save the s3 key to db
-    if (trailer) {
-      await this.prisma.seasonEpisodeFiles.create({
-        data: {
-          fileKey: trailerUploadResult.Key,
-          fileType: MovieFileType.TRAILER,
           seasonEpisode: { connect: { id: newSeasonEpisode.id } },
         },
       });
@@ -263,12 +235,12 @@ export class SeasonEpisodeService {
    * For both :-
    * 1. Incremental movie upload i.e upload the movie files individually
    * If this is a new movie incremental upload,
-   * i.e the movie files poster, trailer, video are being uploaded individualy
+   * i.e the movie files poster, video are being uploaded individualy
    * then the files don't exist yet in s3. Hence no deletes are needed.
    *
    * 2. Update movie details
    * If this is an update to an already existing movie,
-   * the movie files(poster, trailer, video) should be deleted from s3 before uploading any new one.
+   * the movie files(poster, video) should be deleted from s3 before uploading any new one.
    */
   async update(
     seriesMovieId: number,
@@ -348,44 +320,6 @@ export class SeasonEpisodeService {
       updateSeasonEpisodeDto.posterUrl = newPosterUploadResult.Location;
     }
 
-    // if newtrailer is provided
-    // delete the old trailer and save the new one
-    const trailer = files.find((file) => file.fieldname === 'trailer');
-    let newTrailerUploadResult: S3.ManagedUpload.SendData;
-    if (trailer) {
-      const currentTrailer = episode.seasonEpisodeFiles.find(
-        (file) => file.fileType === MovieFileType.TRAILER,
-      );
-      try {
-        // For movie/episode update case
-        // If exists delete current trailer from db and s3
-        if (currentTrailer) {
-          await this.prisma.seasonEpisodeFiles.delete({
-            where: { fileKey: currentTrailer.fileKey },
-          });
-
-          await this.publicFileService.deleteMovieFile(currentTrailer.fileKey);
-        }
-      } catch (e) {
-        throw new InternalServerErrorException(
-          `Error deleting current trailer from s3: ${e.message}`,
-        );
-      }
-      const newTrailer = files.find((file) => file.fieldname === 'trailer');
-      const newTrailerOriginalname = stripAndHyphenate(newTrailer.originalname);
-      try {
-        newTrailerUploadResult = await this.publicFileService.uploadMovieFile(
-          newTrailerOriginalname,
-          newTrailer.buffer,
-        );
-      } catch (e) {
-        throw new InternalServerErrorException(
-          `Error uploading new trailer to s3: ${e.message}`,
-        );
-      }
-      updateSeasonEpisodeDto.trailerUrl = newTrailerUploadResult.Location;
-    }
-
     // if new video is provided
     // delete the old video and save the new one
     const video = files.find((file) => file.fieldname === 'video');
@@ -437,17 +371,6 @@ export class SeasonEpisodeService {
         data: {
           fileKey: newPosterUploadResult.Key,
           fileType: MovieFileType.POSTER,
-          seasonEpisode: { connect: { id: updatedSeasonEpisode.id } },
-        },
-      });
-    }
-
-    // if the trailer was uploaded save the s3 key to db
-    if (trailer) {
-      await this.prisma.seasonEpisodeFiles.create({
-        data: {
-          fileKey: newTrailerUploadResult.Key,
-          fileType: MovieFileType.TRAILER,
           seasonEpisode: { connect: { id: updatedSeasonEpisode.id } },
         },
       });
@@ -513,7 +436,7 @@ export class SeasonEpisodeService {
       );
     }
 
-    // get the public season episode files i.e poster and trailer
+    // get the public season episode files i.e poster
     // Exclude video, because it is not public
     const publicSeasonEpisodeFiles = episode.seasonEpisodeFiles.filter(
       (file) => file.fileType !== MovieFileType.VIDEO,

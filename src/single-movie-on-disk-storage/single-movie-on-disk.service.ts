@@ -180,7 +180,7 @@ export class SingleMoviesOnDiskService {
           connect: languagesArrayObj.map((lang) => ({ id: lang.id })),
         },
         posterUrl: posterPath,
-        trailerUrl: trailerPath,
+        trailerKey: trailerPath,
         videoKey: videoPath,
         filesFolder: newSingleMovieFolder,
         contentCreator: { connect: { id: contentCreator.id } },
@@ -322,7 +322,7 @@ export class SingleMoviesOnDiskService {
     // if newtrailer is provided
     // delete the old trailer and save the new one
     if (files.find((file) => file.fieldname === 'trailer')) {
-      const oldTrailer = singleMovie.trailerUrl;
+      const oldTrailer = singleMovie.trailerKey;
       try {
         fs.unlink(oldTrailer);
       } catch (error) {

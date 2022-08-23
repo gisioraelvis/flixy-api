@@ -45,6 +45,35 @@ export class PublicFileService {
   }
 
   /**
+   * Fetches a public movie file from s3 as a stream
+   * @param fileKey
+   * @returns {Promise<any>} - the file stream
+   *
+   * // TODO: Keep track of issue until fixed
+   * @issue crashes when AWS-SDK throws any type of Error
+   *     - Incorrect key when searching for an object
+   *     - Incorrect credentials
+   * @see https://github.com/aws/aws-sdk-js/issues/4123
+   */
+  async getMovieFile(fileKey: string): Promise<any> {
+    const s3 = new S3();
+    try {
+      const fileStream = s3
+        .getObject({
+          Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
+          Key: fileKey,
+        })
+        .createReadStream();
+
+      return fileStream;
+    } catch (e) {
+      throw new InternalServerErrorException(
+        `Error fetching file from s3: ${e.message}`,
+      );
+    }
+  }
+
+  /**
    * Uploads a file to S3 and saves the file metadata to the db
    * i.e file key, url to access the file, and the owner id
    * @param filename

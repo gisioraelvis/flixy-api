@@ -8,18 +8,40 @@ import { statSync, createReadStream } from 'fs';
 import { join } from 'path';
 import RequestWithUser from 'src/auth/requestWithUser.interface';
 import { PrivateFileService } from 'src/s3-private-file/private-file.service';
+import { PublicFileService } from 'src/s3-public-file/public-file.service';
 
 @Injectable()
 export class StreamingService {
-  constructor(private readonly privateFileService: PrivateFileService) {}
+  constructor(
+    private readonly privateFileService: PrivateFileService,
+    private readonly publicFileService: PublicFileService,
+  ) {}
 
   /**
-   * Streams a private movie file from S3.
-   * @param fileKey - The key of the file to stream
+   * Streams a trailer movie video file from S3.
+   * @param fileKey - The key of the trailer file to stream
    * @param req - The request object
    * @param res - The response object
    */
-  async s3FileStream(fileKey: string, req: RequestWithUser, res: Response) {
+  async s3TrailerStream(fileKey: string, req: RequestWithUser, res: Response) {
+    try {
+      const fileStream = await this.publicFileService.getMovieFile(fileKey);
+
+      //console.log(req.user);
+
+      fileStream.pipe(res);
+    } catch (e) {
+      throw new InternalServerErrorException(e.message);
+    }
+  }
+
+  /**
+   * Streams a private video movie file from S3.
+   * @param fileKey - The key of the video file to stream
+   * @param req - The request object
+   * @param res - The response object
+   */
+  async s3VideoStream(fileKey: string, req: RequestWithUser, res: Response) {
     try {
       const fileStream = await this.privateFileService.getMovieFile(fileKey);
 

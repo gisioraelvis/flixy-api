@@ -151,12 +151,10 @@ export class SingleMovieService {
     );
 
     // if any of the files was provided and uploaded successfully get the appropriate value
-    // otherwise set to undefined
+    // otherwise set to null
     const posterS3Url = posterUploadResult ? posterUploadResult.Location : null;
-    const trailerS3Url = trailerUploadResult
-      ? trailerUploadResult.Location
-      : null;
-    const videoS3Key = videoUploadResult ? videoUploadResult.Key : undefined;
+    const trailerS3Url = trailerUploadResult ? trailerUploadResult.Key : null;
+    const videoS3Key = videoUploadResult ? videoUploadResult.Key : null;
 
     // create and save the new singleMovie
     const newSingleMovie = await this.prisma.singleMovie.create({
@@ -167,7 +165,7 @@ export class SingleMovieService {
           connect: languagesArrayObj.map((lang) => ({ id: lang.id })),
         },
         posterUrl: posterS3Url,
-        trailerUrl: trailerS3Url,
+        trailerKey: trailerS3Url,
         videoKey: videoS3Key,
         contentCreator: { connect: { id: contentCreator.id } },
       },
@@ -397,7 +395,7 @@ export class SingleMovieService {
           `Error uploading new trailer to s3: ${e.message}`,
         );
       }
-      updateSingleMovieDto.trailerUrl = newTrailerUploadResult.Location;
+      updateSingleMovieDto.trailerKey = newTrailerUploadResult.Key;
     }
 
     // if new video is provided

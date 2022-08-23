@@ -102,16 +102,14 @@ export class SeriesSeasonService {
     // otherwise set to undefined
     const posterS3Url = posterUploadResult ? posterUploadResult.Location : null;
 
-    const trailerS3Url = trailerUploadResult
-      ? trailerUploadResult.Location
-      : null;
+    const trailerS3Key = trailerUploadResult ? trailerUploadResult.Key : null;
 
     // save new series season
     const newSeriesSeason = await this.prisma.seriesSeason.create({
       data: {
         ...createSeriesSeasonDto,
         posterUrl: posterS3Url,
-        trailerUrl: trailerS3Url,
+        trailerKey: trailerS3Key,
         seriesMovie: { connect: { id: seriesMovie.id } },
       },
     });
@@ -357,7 +355,7 @@ export class SeriesSeasonService {
           `Error uploading new trailer to s3: ${e.message}`,
         );
       }
-      updateSeriesSeasonDto.trailerUrl = newTrailerUploadResult.Location;
+      updateSeriesSeasonDto.trailerKey = newTrailerUploadResult.Key;
     }
 
     const updatedSeriesSeason = await this.prisma.seriesSeason.update({
