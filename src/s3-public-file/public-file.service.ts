@@ -32,7 +32,7 @@ export class PublicFileService {
         .upload({
           Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
           Body: dataBuffer,
-          Key: `${uuid()}-${filename}`,
+          Key: filename,
         })
         .promise();
 
@@ -92,7 +92,7 @@ export class PublicFileService {
         .upload({
           Bucket: this.configService.get('AWS_PUBLIC_BUCKET_NAME'),
           Body: dataBuffer,
-          Key: `${uuid()}-${filename}`,
+          Key: `${uuid().slice(0, 4)}-${filename}`,
         })
         .promise();
     } catch (e) {

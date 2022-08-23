@@ -3,9 +3,9 @@ import {
   Res,
   Controller,
   Get,
-  Param,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { StreamingService } from './streaming.service';
 import { Response } from 'express';
@@ -18,24 +18,32 @@ export class StreamingController {
   constructor(private readonly streamingService: StreamingService) {}
 
   // streams movie trailer video file from S3
-  @Get('s3/trailer/:trailerKey')
+  @Get('s3/trailer')
   @UseGuards(JwtAuthGuard)
   async streamS3MovieTrailer(
     @Req() req: RequestWithUser,
-    @Param('trailerKey') trailerKey: string,
+    @Query('trailerKey') trailerKey: string,
     @Res() res: Response,
   ) {
+    // if trailer key is not provided, return error
+    if (!trailerKey) {
+      throw new BadRequestException('trailerKey is required as query param');
+    }
     return this.streamingService.s3TrailerStream(trailerKey, req, res);
   }
 
   // streams movie video file from s3
-  @Get('s3/video/:videoKey')
+  @Get('s3/video')
   @UseGuards(JwtAuthGuard)
   async streamS3MovieVideo(
     @Req() req: RequestWithUser,
-    @Param('videoKey') videoKey: string,
+    @Query('videoKey') videoKey: string,
     @Res() res: Response,
   ) {
+    // if video key is not provided, return error
+    if (!videoKey) {
+      throw new BadRequestException('videoKey is required as query param');
+    }
     return this.streamingService.s3VideoStream(videoKey, req, res);
   }
 

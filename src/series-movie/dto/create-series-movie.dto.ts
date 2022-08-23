@@ -63,4 +63,5 @@ export class CreateSeasonEpisodeDto {
 
   posterUrl: string;
   videoKey: string;
+  filesFolder: string;
 }

@@ -13,6 +13,7 @@ import { MovieFileType, SeasonEpisode } from '@prisma/client';
 import { PrivateFileService } from 'src/s3-private-file/private-file.service';
 import { PublicFileService } from 'src/s3-public-file/public-file.service';
 import { S3 } from 'aws-sdk';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class SeasonEpisodeService {
@@ -68,6 +69,17 @@ export class SeasonEpisodeService {
       );
     }
 
+    // get the seasonFilesFolder
+    const seasonFilesFolder = season.filesFolder;
+
+    // using the episode title create a new episode folder in the seasonFilesFolder
+    const episodeTitle = stripAndHyphenate(createSeasonEpisodeDto.title);
+    const episodeNumber = createSeasonEpisodeDto.episodeNumber;
+    const episodeFilesFolder = `${seasonFilesFolder}/${episodeNumber}.${episodeTitle}`;
+
+    // set the episode filesFolder
+    createSeasonEpisodeDto.filesFolder = episodeFilesFolder;
+
     // check if current Season already has an Episode with episodeNumber
     // episodeNumber is unique per season
     const episode = season.episodes.find(
@@ -90,8 +102,12 @@ export class SeasonEpisodeService {
       // poster is provided
       if (poster) {
         const posterOriginalname = stripAndHyphenate(poster.originalname);
+        const posterS3FileName = `${episodeFilesFolder}/POSTER-${uuid().slice(
+          0,
+          4,
+        )}-${posterOriginalname}`;
         posterUploadResult = await this.publicFileService.uploadMovieFile(
-          posterOriginalname,
+          posterS3FileName,
           poster.buffer,
         );
       }
@@ -99,8 +115,13 @@ export class SeasonEpisodeService {
       // video is provided
       if (video) {
         const videoOriginalname = stripAndHyphenate(video.originalname);
+        const videoS3FileName = `${episodeFilesFolder}/VIDEO-${uuid().slice(
+          0,
+          4,
+        )}-${videoOriginalname}`;
+
         videoUploadResult = await this.privateFileService.uploadMovieFile(
-          videoOriginalname,
+          videoS3FileName,
           video.buffer,
         );
       }
@@ -280,6 +301,9 @@ export class SeasonEpisodeService {
       );
     }
 
+    // get the EpisodeFilesFolder
+    const episodeFilesFolder = episode.filesFolder;
+
     // if newposter is provided
     // delete the old poster and save the new one
     const poster = files.find((file) => file.fieldname === 'poster');
@@ -308,8 +332,13 @@ export class SeasonEpisodeService {
       const newPoster = files.find((file) => file.fieldname === 'poster');
       const newPosterOriginalname = stripAndHyphenate(newPoster.originalname);
       try {
+        const newPosterS3FileName = `${episodeFilesFolder}/POSTER-${uuid().slice(
+          0,
+          4,
+        )}-${newPosterOriginalname}`;
+
         newPosterUploadResult = await this.publicFileService.uploadMovieFile(
-          newPosterOriginalname,
+          newPosterS3FileName,
           newPoster.buffer,
         );
       } catch (e) {
@@ -345,9 +374,13 @@ export class SeasonEpisodeService {
       const newVideo = files.find((file) => file.fieldname === 'video');
       const newVideoOriginalname = stripAndHyphenate(newVideo.originalname);
       try {
+        const newVideoS3FileName = `${episodeFilesFolder}/VIDEO-${uuid().slice(
+          0,
+          4,
+        )}-${newVideoOriginalname}`;
         // the video is stored as a private s3 file
         newVideoUploadResult = await this.privateFileService.uploadMovieFile(
-          newVideoOriginalname,
+          newVideoS3FileName,
           newVideo.buffer,
         );
       } catch (e) {

@@ -15,6 +15,7 @@ import { MovieFileType, Prisma, SeriesMovie } from '@prisma/client';
 import { PublicFileService } from 'src/s3-public-file/public-file.service';
 import { PrivateFileService } from 'src/s3-private-file/private-file.service';
 import { S3 } from 'aws-sdk';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class SeriesMovieService {
@@ -87,6 +88,15 @@ export class SeriesMovieService {
       );
     }
 
+    // movie files folder
+    const seriesMovieTitle = stripAndHyphenate(createSeriesMovieDto.title);
+    const seriesMovieFilesFolder = `SERIES_MOVIE-${seriesMovieTitle}-${uuid().slice(
+      0,
+      8,
+    )}`;
+
+    createSeriesMovieDto.filesFolder = seriesMovieFilesFolder;
+
     // check for movie files
     const poster = files.find((file) => file.fieldname === 'poster');
     const trailer = files.find((file) => file.fieldname === 'trailer');
@@ -98,8 +108,14 @@ export class SeriesMovieService {
       // poster is provided
       if (poster) {
         const posterOriginalname = stripAndHyphenate(poster.originalname);
+
+        const posterS3FileName = `${seriesMovieFilesFolder}/POSTER-${uuid().slice(
+          0,
+          4,
+        )}-${posterOriginalname}`;
+
         posterUploadResult = await this.publicFileService.uploadMovieFile(
-          posterOriginalname,
+          posterS3FileName,
           poster.buffer,
         );
       }
@@ -107,8 +123,14 @@ export class SeriesMovieService {
       // trailer is provided
       if (trailer) {
         const trailerOriginalname = stripAndHyphenate(trailer.originalname);
+
+        const trailerS3FileName = `${seriesMovieFilesFolder}/TRAILER-${uuid().slice(
+          0,
+          4,
+        )}-${trailerOriginalname}`;
+
         trailerUploadResult = await this.publicFileService.uploadMovieFile(
-          trailerOriginalname,
+          trailerS3FileName,
           trailer.buffer,
         );
       }
@@ -270,6 +292,9 @@ export class SeriesMovieService {
       throw new NotFoundException(`SeriesMovie id #${id} does not exist`);
     }
 
+    // SeriesMovie files folder
+    const seriesMovieFilesFolder = seriesMovie.filesFolder;
+
     const { genres, languages } = updateSeriesMovieDto;
 
     // if genres are updated
@@ -324,8 +349,13 @@ export class SeriesMovieService {
       const newPoster = files.find((file) => file.fieldname === 'poster');
       const newPosterOriginalname = stripAndHyphenate(newPoster.originalname);
       try {
+        const posterS3FileName = `${seriesMovieFilesFolder}/POSTER-${uuid().slice(
+          0,
+          4,
+        )}-${newPosterOriginalname}`;
+
         newPosterUploadResult = await this.publicFileService.uploadMovieFile(
-          newPosterOriginalname,
+          posterS3FileName,
           newPoster.buffer,
         );
       } catch (e) {
@@ -362,8 +392,13 @@ export class SeriesMovieService {
       const newTrailer = files.find((file) => file.fieldname === 'trailer');
       const newTrailerOriginalname = stripAndHyphenate(newTrailer.originalname);
       try {
+        const trailerS3FileName = `${seriesMovieFilesFolder}/TRAILER-${uuid().slice(
+          0,
+          4,
+        )}-${newTrailerOriginalname}`;
+
         newTrailerUploadResult = await this.publicFileService.uploadMovieFile(
-          newTrailerOriginalname,
+          trailerS3FileName,
           newTrailer.buffer,
         );
       } catch (e) {

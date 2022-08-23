@@ -12,6 +12,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { MovieFileType, SeriesSeason } from '@prisma/client';
 import { PublicFileService } from 'src/s3-public-file/public-file.service';
 import { S3 } from 'aws-sdk';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class SeriesSeasonService {
@@ -67,6 +68,16 @@ export class SeriesSeasonService {
       );
     }
 
+    // get the SeriesMovie filesFolder
+    const seriesMovieFilesFolder = seriesMovie.filesFolder;
+
+    // get the season title and create the seasonFilesFolder in the SeriesMovie filesFolder
+    const seasonTitle = stripAndHyphenate(createSeriesSeasonDto.title);
+    const seasonNumber = createSeriesSeasonDto.seasonNumber;
+    // folder format - /SeriesMovieTitle/SeasonNumber.SeasonTitle e.g. /got/1.Season-1
+    const seasonFilesFolder = `${seriesMovieFilesFolder}/${seasonNumber}.${seasonTitle}`;
+
+    createSeriesSeasonDto.filesFolder = seasonFilesFolder;
     // check for season files
     const poster = files.find((file) => file.fieldname === 'poster');
     const trailer = files.find((file) => file.fieldname === 'trailer');
@@ -78,8 +89,13 @@ export class SeriesSeasonService {
       // poster is provided
       if (poster) {
         const posterOriginalname = stripAndHyphenate(poster.originalname);
+        const posterS3FileName = `${seasonFilesFolder}/POSTER-${uuid().slice(
+          0,
+          4,
+        )}-${posterOriginalname}`;
+
         posterUploadResult = await this.publicFileService.uploadMovieFile(
-          posterOriginalname,
+          posterS3FileName,
           poster.buffer,
         );
       }
@@ -87,8 +103,13 @@ export class SeriesSeasonService {
       // trailer is provided
       if (trailer) {
         const trailerOriginalname = stripAndHyphenate(trailer.originalname);
+        const trailerS3FileName = `${seasonFilesFolder}/TRAILER-${uuid().slice(
+          0,
+          4,
+        )}-${trailerOriginalname}`;
+
         trailerUploadResult = await this.publicFileService.uploadMovieFile(
-          trailerOriginalname,
+          trailerS3FileName,
           trailer.buffer,
         );
       }
@@ -280,6 +301,9 @@ export class SeriesSeasonService {
       );
     }
 
+    // get the SeriesSeasonFilesFolder
+    const seasonFilesFolder = seriesSeason.filesFolder;
+
     // if newposter is provided
     // delete the old poster and save the new one
     const poster = files.find((file) => file.fieldname === 'poster');
@@ -308,8 +332,9 @@ export class SeriesSeasonService {
       const newPoster = files.find((file) => file.fieldname === 'poster');
       const newPosterOriginalname = stripAndHyphenate(newPoster.originalname);
       try {
+        const newPosterS3FileName = `${seasonFilesFolder}/POSTER-${newPosterOriginalname}`;
         newPosterUploadResult = await this.publicFileService.uploadMovieFile(
-          newPosterOriginalname,
+          newPosterS3FileName,
           newPoster.buffer,
         );
       } catch (e) {
@@ -346,8 +371,9 @@ export class SeriesSeasonService {
       const newTrailer = files.find((file) => file.fieldname === 'trailer');
       const newTrailerOriginalname = stripAndHyphenate(newTrailer.originalname);
       try {
+        const newTrailerS3FileName = `${seasonFilesFolder}/TRAILER-${newTrailerOriginalname}`;
         newTrailerUploadResult = await this.publicFileService.uploadMovieFile(
-          newTrailerOriginalname,
+          newTrailerS3FileName,
           newTrailer.buffer,
         );
       } catch (e) {

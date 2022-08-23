@@ -15,6 +15,7 @@ import { MovieFileType, Prisma, SingleMovie } from '@prisma/client';
 import { PrivateFileService } from 'src/s3-private-file/private-file.service';
 import { PublicFileService } from 'src/s3-public-file/public-file.service';
 import { S3 } from 'aws-sdk';
+import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class SingleMovieService {
@@ -89,6 +90,11 @@ export class SingleMovieService {
       );
     }
 
+    // movie files folder
+    const movieTitle = stripAndHyphenate(createSingleMovieDto.title);
+    const movieFilesFolder = `SINGLE_MOVIE-${movieTitle}-${uuid().slice(0, 8)}`;
+    createSingleMovieDto.filesFolder = movieFilesFolder;
+
     // get for movie files
     const poster = files.find((file) => file.fieldname === 'poster');
     const trailer = files.find((file) => file.fieldname === 'trailer');
@@ -102,8 +108,14 @@ export class SingleMovieService {
       // poster is provided
       if (poster) {
         const posterOriginalname = stripAndHyphenate(poster.originalname);
+
+        const posterS3FileName = `${movieFilesFolder}/POSTER-${uuid().slice(
+          0,
+          4,
+        )}-${posterOriginalname}`;
+
         posterUploadResult = await this.publicFileService.uploadMovieFile(
-          posterOriginalname,
+          posterS3FileName,
           poster.buffer,
         );
       }
@@ -111,8 +123,14 @@ export class SingleMovieService {
       // trailer is provided
       if (trailer) {
         const trailerOriginalname = stripAndHyphenate(trailer.originalname);
+
+        const trailerS3FileName = `${movieFilesFolder}/TRAILER-${uuid().slice(
+          0,
+          4,
+        )}-${trailerOriginalname}`;
+
         trailerUploadResult = await this.publicFileService.uploadMovieFile(
-          trailerOriginalname,
+          trailerS3FileName,
           trailer.buffer,
         );
       }
@@ -120,8 +138,14 @@ export class SingleMovieService {
       // video is provided
       if (video) {
         const videoOriginalname = stripAndHyphenate(video.originalname);
+
+        const videoS3FileName = `${movieFilesFolder}/VIDEO-${uuid().slice(
+          0,
+          4,
+        )}-${videoOriginalname}`;
+
         videoUploadResult = await this.privateFileService.uploadMovieFile(
-          videoOriginalname,
+          videoS3FileName,
           video.buffer,
         );
       }
@@ -294,6 +318,9 @@ export class SingleMovieService {
       );
     }
 
+    // movie files folder
+    const movieFilesFolder = singleMovie.filesFolder;
+
     const { genres, languages } = updateSingleMovieDto;
 
     // if genres are updated
@@ -348,8 +375,13 @@ export class SingleMovieService {
       const newPoster = files.find((file) => file.fieldname === 'poster');
       const newPosterOriginalname = stripAndHyphenate(newPoster.originalname);
       try {
+        const posterS3FileName = `${movieFilesFolder}/POSTER-${uuid().slice(
+          0,
+          4,
+        )}-${newPosterOriginalname}`;
+
         newPosterUploadResult = await this.publicFileService.uploadMovieFile(
-          newPosterOriginalname,
+          posterS3FileName,
           newPoster.buffer,
         );
       } catch (e) {
@@ -386,8 +418,13 @@ export class SingleMovieService {
       const newTrailer = files.find((file) => file.fieldname === 'trailer');
       const newTrailerOriginalname = stripAndHyphenate(newTrailer.originalname);
       try {
+        const trailerS3FileName = `${movieFilesFolder}/TRAILER-${uuid().slice(
+          0,
+          4,
+        )}-${newTrailerOriginalname}`;
+
         newTrailerUploadResult = await this.publicFileService.uploadMovieFile(
-          newTrailerOriginalname,
+          trailerS3FileName,
           newTrailer.buffer,
         );
       } catch (e) {
@@ -423,9 +460,14 @@ export class SingleMovieService {
       const newVideo = files.find((file) => file.fieldname === 'video');
       const newVideoOriginalname = stripAndHyphenate(newVideo.originalname);
       try {
+        const videoS3FileName = `${movieFilesFolder}/VIDEO-${uuid().slice(
+          0,
+          4,
+        )}-${newVideoOriginalname}`;
+
         // the video is stored as a private s3 file
         newVideoUploadResult = await this.privateFileService.uploadMovieFile(
-          newVideoOriginalname,
+          videoS3FileName,
           newVideo.buffer,
         );
       } catch (e) {
