@@ -140,20 +140,25 @@ export class SeriesMovieService {
       );
     }
 
-    // parse genres from string to array
-    const genresArray = commaSeparatedStringToArray(
-      createSeriesMovieDto.genres,
-    );
+    // if genres are comma separated strings(from postman in dev mode) parse to array
+    // else use as is (array from frontend client)
+    const genresArray =
+      createSeriesMovieDto.genres instanceof Array
+        ? (createSeriesMovieDto.genres as string[])
+        : commaSeparatedStringToArray(createSeriesMovieDto.genres);
 
     // save genres
     const genresArrayObj = await Promise.all(
       genresArray.map((name) => this.preloadGenresByName(name)),
     );
 
-    // parse languages from string to array
-    const languagesArray = commaSeparatedStringToArray(
-      createSeriesMovieDto.languages,
-    );
+    // if languanges are comma separated strings(from postman in dev mode) parse to array
+    // else use as is (array from frontend client)
+    const languagesArray =
+      createSeriesMovieDto.languages instanceof Array
+        ? (createSeriesMovieDto.languages as string[])
+        : commaSeparatedStringToArray(createSeriesMovieDto.languages);
+
     // save languages
     const languagesArrayObj = await Promise.all(
       languagesArray.map((name) => this.preloadLanguagesByName(name)),
@@ -299,7 +304,12 @@ export class SeriesMovieService {
 
     // if genres are updated
     if (genres) {
-      const genresArray = commaSeparatedStringToArray(genres);
+      // if genres are comma separated strings(from postman in dev mode) parse to array
+      // else use as is (array from frontend client)
+      const genresArray =
+        updateSeriesMovieDto.genres instanceof Array
+          ? (updateSeriesMovieDto.genres as string[])
+          : commaSeparatedStringToArray(updateSeriesMovieDto.genres);
       const genresArrayObj =
         updateSeriesMovieDto.genres &&
         (await Promise.all(
@@ -311,7 +321,12 @@ export class SeriesMovieService {
 
     // if languages are updated
     if (languages) {
-      const languagesArray = commaSeparatedStringToArray(languages);
+      // if languanges are comma separated strings(from postman in dev mode) parse to array
+      // else use as is (array from frontend client)
+      const languagesArray =
+        updateSeriesMovieDto.languages instanceof Array
+          ? (updateSeriesMovieDto.languages as string[])
+          : commaSeparatedStringToArray(updateSeriesMovieDto.languages);
       const languagesArrayObj =
         updateSeriesMovieDto.languages &&
         (await Promise.all(
