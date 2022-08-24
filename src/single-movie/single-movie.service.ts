@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateSingleMovieDto } from './dto/create-single-movie.dto';
 import { UpdateSingleMovieDto } from './dto/update-single-movie.dto';
@@ -87,6 +88,17 @@ export class SingleMovieService {
     if (!user.isContentCreator) {
       throw new UnauthorizedException(
         `User id #${userId} is not authorized to upload movies`,
+      );
+    }
+
+    // get movie price minus currency e.g Ksh 100
+    const moviePrice = createSingleMovieDto.price.split(' ')[0];
+
+    // if isPremiering is true, price must > 0
+    if (createSingleMovieDto.isPremiering && +moviePrice <= 0) {
+      console.log(createSingleMovieDto.isPremiering);
+      throw new BadRequestException(
+        `Price must be greater than 0 for a premiering movie`,
       );
     }
 
@@ -320,6 +332,16 @@ export class SingleMovieService {
     if (!singleMovie) {
       throw new NotFoundException(
         `SingleMovie id #${singleMovieId} does not exist`,
+      );
+    }
+
+    // get movie price minus currency e.g Ksh 100
+    const moviePrice = updateSingleMovieDto.price.split(' ')[0];
+
+    // if isPremiering is true, price must > 0
+    if (updateSingleMovieDto.isPremiering && +moviePrice <= 0) {
+      throw new BadRequestException(
+        `Price must be greater than 0 for a premiering movie`,
       );
     }
 

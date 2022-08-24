@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateSeriesSeasonDto } from './dto/create-series-movie.dto';
 import { UpdateSeriesSeasonDto } from './dto/update-series-movie.dto';
@@ -65,6 +66,16 @@ export class SeriesSeasonService {
     if (seriesSeason) {
       throw new ConflictException(
         `Season ${createSeriesSeasonDto.seasonNumber} already exists on SeriesMovie id #${seriesMovieId}`,
+      );
+    }
+
+    // get season price minus currency e.g Ksh 100
+    const moviePrice = createSeriesSeasonDto.price.split(' ')[0];
+
+    // if isPremiering is true, price must > 0
+    if (createSeriesSeasonDto.isPremiering && +moviePrice <= 0) {
+      throw new BadRequestException(
+        `Price must be greater than 0 for a premiering season`,
       );
     }
 
@@ -298,6 +309,16 @@ export class SeriesSeasonService {
     if (!seriesSeason) {
       throw new NotFoundException(
         `SeriesSeason id #${seasonId} does not exist on SeriesMovie id #${seriesMovieId}`,
+      );
+    }
+
+    // get season price minus currency e.g Ksh 100
+    const moviePrice = updateSeriesSeasonDto.price.split(' ')[0];
+
+    // if isPremiering is true, price must be > 0
+    if (updateSeriesSeasonDto.isPremiering && +moviePrice <= 0) {
+      throw new BadRequestException(
+        `Price must be greater than 0 for a premiering season`,
       );
     }
 
