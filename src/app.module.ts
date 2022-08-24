@@ -18,6 +18,7 @@ import { AppController } from './app.controller';
 import { SingleMovieModule } from './single-movie/single-movie.module';
 import { StreamingModule } from './streaming/streaming.module';
 import { SeriesMovieModule } from './series-movie/series-movie.module';
+import { MpesaExpressModule } from './mpesa-express/mpesa-express.module';
 
 @Module({
   imports: [
@@ -54,6 +55,14 @@ import { SeriesMovieModule } from './series-movie/series-movie.module';
         AWS_SECRET_ACCESS_KEY: Joi.string().required(),
         AWS_PUBLIC_BUCKET_NAME: Joi.string().required(),
         AWS_PRIVATE_BUCKET_NAME: Joi.string().required(),
+        MPESA_EXPRESS_CONSUMER_KEY: Joi.string().required(),
+        MPESA_EXPRESS_CONSUMER_SECRET: Joi.string().required(),
+        MPESA_OAUTH_ENDPOINT: Joi.string().uri().required(),
+        MPESA_EXPRESS_ENDPOINT: Joi.string().uri().required(),
+        MPESA_SHORTCODE: Joi.number().required(),
+        MPESA_EXPRESS_PASSKEY: Joi.string().required(),
+        MPESA_PARTY_A: Joi.number().required(),
+        MPESA_CALLBACK_URL: Joi.string().uri().required(),
       }),
     }),
     // makes uploads folder accessible to the client
@@ -74,6 +83,7 @@ import { SeriesMovieModule } from './series-movie/series-movie.module';
     SingleMovieModule,
     StreamingModule,
     SeriesMovieModule,
+    MpesaExpressModule,
   ],
   controllers: [AppController],
 })

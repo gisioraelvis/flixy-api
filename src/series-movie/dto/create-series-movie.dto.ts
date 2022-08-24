@@ -39,7 +39,7 @@ export class CreateSeriesSeasonDto {
   isPremiering: boolean;
 
   @IsNotEmpty()
-  price: string;
+  price: number;
 
   posterUrl: string;
   trailerKey: string;

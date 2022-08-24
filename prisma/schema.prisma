@@ -20,24 +20,25 @@ enum Role {
 }
 
 model User {
-  id                        Int                           @id @default(autoincrement())
-  email                     String                        @unique
-  isEmailConfirmed          Boolean                       @default(false)
-  phoneNumber               String                        @unique
-  isPhoneNumberConfirmed    Boolean                       @default(false)
-  password                  String
-  status                    UserStatus                    @default(PENDING)
-  isAdmin                   Boolean                       @default(false)
-  isContentCreator          Boolean                       @default(false)
-  contentCreator            ContentCreator?
-  roles                     Role[]                        @default([USER])
-  watchLaters               UserMovieWatchLater[]
-  premieringMoviesPurchases UserPremieringMoviePurchase[]
-  subscriptionPackage       UserSubscriptionPackage?
-  privateFiles              PrivateFile[]
-  publicFiles               PublicFile[]
-  createdAt                 DateTime                      @default(now())
-  updatedAt                 DateTime                      @updatedAt
+  id                         Int                                       @id @default(autoincrement())
+  email                      String                                    @unique
+  isEmailConfirmed           Boolean                                   @default(false)
+  phoneNumber                String                                    @unique
+  isPhoneNumberConfirmed     Boolean                                   @default(false)
+  password                   String
+  status                     UserStatus                                @default(PENDING)
+  isAdmin                    Boolean                                   @default(false)
+  isContentCreator           Boolean                                   @default(false)
+  contentCreator             ContentCreator?
+  roles                      Role[]                                    @default([USER])
+  watchLaters                UserMovieWatchLater[]
+  singleMoviePurchases       UserPremieringSingleMoviePurchase[]
+  seriesMovieSeasonPurchases UserPremieringSeriesMovieSeasonPurchase[]
+  subscriptionPackage        UserSubscriptionPackage?
+  privateFiles               PrivateFile[]
+  publicFiles                PublicFile[]
+  createdAt                  DateTime                                  @default(now())
+  updatedAt                  DateTime                                  @updatedAt
 }
 
 model ContentCreator {
@@ -91,7 +92,7 @@ model Language {
 // The poster, trailer & video are set to optional 
 
 model SingleMovie {
-  id                      Int                           @id @default(autoincrement())
+  id                      Int                                 @id @default(autoincrement())
   title                   String
   description             String
   duration                String
@@ -100,18 +101,18 @@ model SingleMovie {
   videoKey                String?
   filesFolder             String?
   singleMovieFiles        SingleMovieFiles[]
-  isReleased              Boolean                       @default(false)
-  isPremiering            Boolean                       @default(true)
-  price                   String?
+  isReleased              Boolean                             @default(false)
+  isPremiering            Boolean                             @default(true)
+  price                   Int?
   genres                  Genre[]
   languages               Language[]
-  views                   Int                           @default(0)
-  contentCreator          ContentCreator                @relation(fields: [contentCreatorId], references: [id])
+  views                   Int                                 @default(0)
+  contentCreator          ContentCreator                      @relation(fields: [contentCreatorId], references: [id])
   contentCreatorId        Int
-  userPremieringPurchases UserPremieringMoviePurchase[]
+  userPremieringPurchases UserPremieringSingleMoviePurchase[]
   userWatchLaters         UserMovieWatchLater[]
-  createdAt               DateTime                      @default(now())
-  updatedAt               DateTime                      @updatedAt
+  createdAt               DateTime                            @default(now())
+  updatedAt               DateTime                            @updatedAt
 }
 
 enum MovieFileType {
@@ -162,8 +163,8 @@ model SeriesMovieFiles {
 }
 
 model SeriesSeason {
-  id                      Int                           @id @default(autoincrement())
-  seriesMovie             SeriesMovie                   @relation(fields: [seriesMovieId], references: [id], onDelete: Cascade)
+  id                      Int                                       @id @default(autoincrement())
+  seriesMovie             SeriesMovie                               @relation(fields: [seriesMovieId], references: [id], onDelete: Cascade)
   seriesMovieId           Int
   seasonNumber            Int
   title                   String
@@ -172,13 +173,13 @@ model SeriesSeason {
   trailerKey              String?
   filesFolder             String?
   seriesSeasonFiles       SeriesSeasonFiles[]
-  isPremiering            Boolean                       @default(false)
-  price                   String?
-  views                   Int                           @default(0)
-  userPremieringPurchases UserPremieringMoviePurchase[]
+  isPremiering            Boolean                                   @default(false)
+  price                   Int?
+  views                   Int                                       @default(0)
+  userPremieringPurchases UserPremieringSeriesMovieSeasonPurchase[]
   episodes                SeasonEpisode[]
-  createdAt               DateTime                      @default(now())
-  updatedAt               DateTime                      @updatedAt
+  createdAt               DateTime                                  @default(now())
+  updatedAt               DateTime                                  @updatedAt
 }
 
 model SeriesSeasonFiles {
@@ -230,14 +231,26 @@ model UserMovieWatchLater {
   updatedAt     DateTime    @updatedAt
 }
 
-model UserPremieringMoviePurchase {
+model UserPremieringSingleMoviePurchase {
+  id            Int         @id @default(autoincrement())
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int
+  singleMovie   SingleMovie @relation(fields: [singleMovieId], references: [id])
+  singleMovieId Int
+  mpesaReceiptNumber String
+  amount         Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model UserPremieringSeriesMovieSeasonPurchase {
   id                  Int          @id @default(autoincrement())
   user                User         @relation(fields: [userId], references: [id])
   userId              Int
-  singleMovie         SingleMovie  @relation(fields: [singleMovieId], references: [id])
-  singleMovieId       Int
   seriesMovieSeason   SeriesSeason @relation(fields: [seriesMovieSeasonId], references: [id])
   seriesMovieSeasonId Int
+  mpesaReceiptNumber String
+  amount         Int
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 }
@@ -254,7 +267,7 @@ model SubscriptionPackage {
   name              PackageName
   description       String
   duration          Int                       @default(1) // in months
-  price             String
+  price             Int
   createdAt         DateTime                  @default(now())
   updatedAt         DateTime                  @updatedAt
   userSubscriptions UserSubscriptionPackage[]

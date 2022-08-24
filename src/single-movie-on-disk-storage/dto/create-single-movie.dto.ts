@@ -23,7 +23,7 @@ export class CreateSingleMovieDto {
   isPremiering: boolean;
 
   @IsNotEmpty()
-  price: string;
+  price: number;
 
   posterUrl: string;
   trailerUrl: string;

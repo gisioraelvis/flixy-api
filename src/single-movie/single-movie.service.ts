@@ -91,11 +91,8 @@ export class SingleMovieService {
       );
     }
 
-    // get movie price minus currency e.g Ksh 100
-    const moviePrice = createSingleMovieDto.price.split(' ')[0];
-
     // if isPremiering is true, price must > 0
-    if (createSingleMovieDto.isPremiering && +moviePrice <= 0) {
+    if (createSingleMovieDto.isPremiering && +createSingleMovieDto.price <= 0) {
       console.log(createSingleMovieDto.isPremiering);
       throw new BadRequestException(
         `Price must be greater than 0 for a premiering movie`,
@@ -335,11 +332,8 @@ export class SingleMovieService {
       );
     }
 
-    // get movie price minus currency e.g Ksh 100
-    const moviePrice = updateSingleMovieDto.price.split(' ')[0];
-
     // if isPremiering is true, price must > 0
-    if (updateSingleMovieDto.isPremiering && +moviePrice <= 0) {
+    if (updateSingleMovieDto.isPremiering && +updateSingleMovieDto.price <= 0) {
       throw new BadRequestException(
         `Price must be greater than 0 for a premiering movie`,
       );

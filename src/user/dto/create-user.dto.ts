@@ -8,8 +8,9 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @IsString()
-  @Matches(/^\+[1-9]\d{1,14}$/, {
-    message: 'Phone number must start with country code e.g. +254',
+  // 2547xxxxxxxx
+  @Matches(/^2547[0-9]{8}$/, {
+    message: 'Phone number must be a valid phone number',
   })
   phoneNumber: string;
 

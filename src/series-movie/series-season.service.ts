@@ -69,11 +69,11 @@ export class SeriesSeasonService {
       );
     }
 
-    // get season price minus currency e.g Ksh 100
-    const moviePrice = createSeriesSeasonDto.price.split(' ')[0];
-
     // if isPremiering is true, price must > 0
-    if (createSeriesSeasonDto.isPremiering && +moviePrice <= 0) {
+    if (
+      createSeriesSeasonDto.isPremiering &&
+      +createSeriesSeasonDto.price <= 0
+    ) {
       throw new BadRequestException(
         `Price must be greater than 0 for a premiering season`,
       );
@@ -312,11 +312,11 @@ export class SeriesSeasonService {
       );
     }
 
-    // get season price minus currency e.g Ksh 100
-    const moviePrice = updateSeriesSeasonDto.price.split(' ')[0];
-
     // if isPremiering is true, price must be > 0
-    if (updateSeriesSeasonDto.isPremiering && +moviePrice <= 0) {
+    if (
+      updateSeriesSeasonDto.isPremiering &&
+      +updateSeriesSeasonDto.price <= 0
+    ) {
       throw new BadRequestException(
         `Price must be greater than 0 for a premiering season`,
       );
