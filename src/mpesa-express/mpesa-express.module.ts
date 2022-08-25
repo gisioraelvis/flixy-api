@@ -1,9 +1,4 @@
-import {
-  Module,
-  NestModule,
-  RequestMethod,
-  MiddlewareConsumer,
-} from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { MpesaExpressService } from './mpesa-express.service';
 import { MpesaExpressController } from './mpesa-express.controller';
 import { MPesaOAuthMiddleware } from './mpesa-oauth.middleware';
