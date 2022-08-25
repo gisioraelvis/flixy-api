@@ -19,6 +19,7 @@ import { SingleMovieModule } from './single-movie/single-movie.module';
 import { StreamingModule } from './streaming/streaming.module';
 import { SeriesMovieModule } from './series-movie/series-movie.module';
 import { MpesaExpressModule } from './mpesa-express/mpesa-express.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { MpesaExpressModule } from './mpesa-express/mpesa-express.module';
     StreamingModule,
     SeriesMovieModule,
     MpesaExpressModule,
+    ChatModule,
   ],
   controllers: [AppController],
 })

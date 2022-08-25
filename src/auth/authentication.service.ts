@@ -6,6 +6,9 @@ import { EmailPasswordResetService } from './emailPasswordReset.service';
 import { User } from '@prisma/client';
 import { PasswordService } from './passwordHashing.service';
 import { JwtService } from '@nestjs/jwt';
+import TokenPayload from './tokenPayload.interface';
+import { ConfigService } from '@nestjs/config';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthenticationService {
@@ -16,6 +19,8 @@ export class AuthenticationService {
     private readonly jwtService: JwtService,
     private readonly emailPasswordResetService: EmailPasswordResetService,
     private passwordService: PasswordService,
+    private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   /**
@@ -90,5 +95,17 @@ export class AuthenticationService {
       token,
     );
     return await this.userService.updatePassword(user.email, newpassword);
+  }
+
+  public async getUserFromAuthenticationToken(token: string) {
+    const payload: TokenPayload = this.jwtService.verify(token, {
+      secret: this.configService.get('JWT_SECRET'),
+    });
+
+    if (payload.email) {
+      return this.prisma.user.findUnique({
+        where: { email: payload.email },
+      });
+    }
   }
 }

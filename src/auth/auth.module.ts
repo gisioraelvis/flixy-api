@@ -34,5 +34,6 @@ import { PasswordService } from './passwordHashing.service';
     PhoneNumberConfirmationService,
     PasswordService,
   ],
+  exports: [AuthModule, AuthenticationService],
 })
 export class AuthModule {}
