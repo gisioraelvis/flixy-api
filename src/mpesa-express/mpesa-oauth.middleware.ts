@@ -32,6 +32,9 @@ export class MPesaOAuthMiddleware implements NestMiddleware {
         },
       });
 
+      console.log('--------------MPesaOAuthMiddleware---------------------');
+      console.log(`MPESA_OAUTH_TOKEN: ${data.access_token}`);
+
       // Get the Oauth access token from the response data object and set it in the request object
       req.mPesaOAuthToken = data['access_token'];
 

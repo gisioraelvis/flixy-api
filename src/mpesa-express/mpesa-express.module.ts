@@ -17,6 +17,6 @@ export class MpesaExpressModule implements NestModule {
     // TODO: restrict to mpesa express routes only
     consumer
       .apply(MPesaOAuthMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.GET });
+      .forRoutes('*/mpesa-express/single-movie/*');
   }
 }

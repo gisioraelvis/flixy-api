@@ -47,6 +47,8 @@ export class MpesaExpressService {
     if (!user) {
       throw new BadRequestException(`User id #${req.user.id} does not exist`);
     }
+
+    // Mobile Number to receive the STK Pin Prompt,  should follow the format:2547xxxxxxxx
     const phoneNumber = user.phoneNumber;
 
     // set the current user id
@@ -71,8 +73,8 @@ export class MpesaExpressService {
 
     const transcationType = 'CustomerPayBillOnline';
 
-    // Sender, should follow the format:2547xxxxxxxx
-    const partyA = this.configService.get('MPESA_PARTY_A');
+    // Sender, same as phoneNumber, should follow the format:2547xxxxxxxx
+    const partyA = phoneNumber;
 
     // The business short code (Till or Pay Bill)
     const partyB = this.configService.get('MPESA_SHORTCODE');
@@ -83,7 +85,7 @@ export class MpesaExpressService {
       'MPESA_CALLBACK_URL',
     )}/v1/mpesa-express/single-movie/callback`;
 
-    const accountReference = `Payment by user id #${user.id} for SingleMovie id #${singleMovieId}`;
+    const accountReference = `Flixy: user id #${user.id} for SingleMovie id #${singleMovieId}`;
     const transactionDesc = 'Paid with M-Pesa Express';
 
     try {
